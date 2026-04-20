@@ -1,906 +1,680 @@
-/* ============================================================
-   QUEUEEASE — INTERACTIVE JAVASCRIPT ENGINE
-   3D Effects | Live Queue | Charts | Animations
-   ============================================================ */
+/* ===================================================================
+   MSME DEMAND FORECASTER — Interactive Dashboard Logic
+   Chart.js · Forecasts · Toggles · Drag-Drop · Animations
+=================================================================== */
 
 'use strict';
 
-// ---- DOM Ready ----
-document.addEventListener('DOMContentLoaded', () => {
-    initNavbar();
-    initParticles();
-    initHeroCanvas();
-    initScrollReveal();
-    initCounters();
-    initQueueSystem();
-    initDoctorPanel();
-    initCharts();
-    initImpactBars();
-    initPredictionChart();
-    initClock();
-    initMobileNav();
-    initQRGrid();
+// ─── STATE ──────────────────────────────────────────────────────
+const state = {
+  ciEnabled: false,
+  festivalEnabled: false,
+  currentTimeframe: '30d',
+  currentProduct: 'smartwatch',
+  forecastChart: null,
+};
+
+// ─── DATA ENGINE ─────────────────────────────────────────────────
+const FORECAST_DATA = {
+  smartwatch: {
+    labels30: generateLabels(30),
+    actual: generateActual(30, 28, 42, 0),
+    forecast: generateForecast(30, 30, 45, 8),
+    ciUpper: generateForecast(30, 40, 58, 8),
+    ciLower: generateForecast(30, 22, 35, 8),
+    festivalForecast: generateFestivalForecast(30, 30, 45, 8, 0.34),
+    color: '0, 245, 255',
+    stockout: 3,
+  },
+  powerbank: {
+    labels30: generateLabels(30),
+    actual: generateActual(30, 40, 60, 2),
+    forecast: generateForecast(30, 45, 65, 10),
+    ciUpper: generateForecast(30, 58, 80, 10),
+    ciLower: generateForecast(30, 32, 50, 10),
+    festivalForecast: generateFestivalForecast(30, 45, 65, 10, 0.2),
+    color: '255, 215, 0',
+    stockout: null,
+  },
+  earbuds: {
+    labels30: generateLabels(30),
+    actual: generateActual(30, 55, 75, 4),
+    forecast: generateForecast(30, 58, 80, 12),
+    ciUpper: generateForecast(30, 70, 95, 12),
+    ciLower: generateForecast(30, 48, 65, 12),
+    festivalForecast: generateFestivalForecast(30, 58, 80, 12, 0.22),
+    color: '0, 255, 136',
+    stockout: null,
+  },
+  cables: {
+    labels30: generateLabels(30),
+    actual: generateActual(30, 80, 120, 5),
+    forecast: generateForecast(30, 85, 125, 15),
+    ciUpper: generateForecast(30, 100, 145, 15),
+    ciLower: generateForecast(30, 70, 105, 15),
+    festivalForecast: generateFestivalForecast(30, 85, 125, 15, 0.15),
+    color: '191, 95, 255',
+    stockout: null,
+  },
+};
+
+function generateLabels(n) {
+  const labels = [];
+  const today = new Date();
+  for (let i = -7; i < n; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    labels.push(d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }));
+  }
+  return labels;
+}
+
+function generateActual(n, min, max, seed) {
+  const arr = [];
+  let val = min + (max - min) / 2;
+  for (let i = 0; i < n + 7; i++) {
+    if (i <= 6) { // past 7 days
+      val += (Math.sin(i * 0.8 + seed) * 4) + (Math.random() - 0.5) * 6;
+      val = Math.max(min, Math.min(max, val));
+      arr.push(Math.round(val));
+    } else {
+      arr.push(null);
+    }
+  }
+  return arr;
+}
+
+function generateForecast(n, min, max, seed) {
+  const arr = [];
+  let val = min + (max - min) / 2;
+  for (let i = 0; i < n + 7; i++) {
+    val += (Math.sin(i * 0.6 + seed) * 5) + (Math.random() - 0.5) * 4;
+    val = Math.max(min - 5, Math.min(max + 10, val));
+    // Trend upward toward end
+    if (i > 20) val += 0.3;
+    arr.push(Math.round(val));
+  }
+  return arr;
+}
+
+function generateFestivalForecast(n, min, max, seed, boost) {
+  const base = generateForecast(n, min, max, seed);
+  return base.map((v, i) => {
+    if (i > 25) return Math.round(v * (1 + boost));
+    if (i > 20) return Math.round(v * (1 + boost * 0.5));
+    return v;
+  });
+}
+
+// ─── CHART INITIALIZATION ─────────────────────────────────────────
+function initChart() {
+  const ctx = document.getElementById('forecastChart').getContext('2d');
+  const data = FORECAST_DATA[state.currentProduct];
+
+  // Gradient fills
+  const gradientForecast = ctx.createLinearGradient(0, 0, 0, 380);
+  gradientForecast.addColorStop(0, `rgba(${data.color}, 0.25)`);
+  gradientForecast.addColorStop(1, `rgba(${data.color}, 0.01)`);
+
+  const gradientCI = ctx.createLinearGradient(0, 0, 0, 380);
+  gradientCI.addColorStop(0, `rgba(0, 245, 255, 0.12)`);
+  gradientCI.addColorStop(1, `rgba(0, 245, 255, 0.01)`);
+
+  const datasets = buildDatasets(data, ctx);
+
+  state.forecastChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.labels30,
+      datasets: datasets,
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      animation: {
+        duration: 800,
+        easing: 'easeInOutCubic',
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(4, 10, 18, 0.95)',
+          borderColor: `rgba(${data.color}, 0.4)`,
+          borderWidth: 1,
+          titleColor: '#e8f4ff',
+          bodyColor: '#6b8aab',
+          padding: 12,
+          cornerRadius: 10,
+          titleFont: { family: 'Inter', size: 13, weight: '600' },
+          bodyFont: { family: 'Inter', size: 12 },
+          callbacks: {
+            label: function(context) {
+              const label = context.dataset.label || '';
+              const value = context.parsed.y;
+              if (value === null) return null;
+              return `  ${label}: ${value} units`;
+            }
+          }
+        },
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+          ticks: {
+            color: '#3d5a77',
+            font: { size: 11 },
+            maxTicksLimit: 10,
+          },
+          border: { display: false },
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+          ticks: {
+            color: '#3d5a77',
+            font: { size: 11 },
+            callback: (v) => v + ' u',
+          },
+          border: { display: false },
+        },
+      },
+    },
+  });
+}
+
+function buildDatasets(data, ctx) {
+  const color = data.color;
+  const datasets = [];
+
+  // CI Band (filled area between upper and lower) — only if enabled
+  if (state.ciEnabled) {
+    datasets.push({
+      label: '95% CI Upper',
+      data: data.ciUpper,
+      borderColor: 'transparent',
+      backgroundColor: `rgba(0, 245, 255, 0.07)`,
+      fill: '+1',
+      tension: 0.4,
+      pointRadius: 0,
+      pointHoverRadius: 0,
+    });
+    datasets.push({
+      label: '95% CI Lower',
+      data: data.ciLower,
+      borderColor: `rgba(0, 245, 255, 0.25)`,
+      borderDash: [4, 4],
+      borderWidth: 1,
+      backgroundColor: 'transparent',
+      fill: false,
+      tension: 0.4,
+      pointRadius: 0,
+      pointHoverRadius: 0,
+    });
+  }
+
+  // Festival Adjusted (if enabled)
+  if (state.festivalEnabled) {
+    datasets.push({
+      label: 'Festival Adjusted',
+      data: data.festivalForecast,
+      borderColor: 'rgba(255, 140, 0, 0.8)',
+      borderWidth: 2,
+      borderDash: [6, 3],
+      backgroundColor: 'transparent',
+      fill: false,
+      tension: 0.4,
+      pointRadius: 0,
+      pointHoverRadius: 5,
+    });
+  }
+
+  // AI Forecast (main line)
+  const gradForecast = ctx.createLinearGradient(0, 0, 0, 380);
+  gradForecast.addColorStop(0, `rgba(${color}, 0.2)`);
+  gradForecast.addColorStop(1, `rgba(${color}, 0.0)`);
+
+  datasets.push({
+    label: 'AI Forecast',
+    data: data.forecast,
+    borderColor: `rgba(${color}, 1)`,
+    borderWidth: 2.5,
+    backgroundColor: gradForecast,
+    fill: true,
+    tension: 0.4,
+    pointRadius: 0,
+    pointHoverRadius: 6,
+    pointHoverBackgroundColor: `rgba(${color}, 1)`,
+    pointHoverBorderColor: '#fff',
+    pointHoverBorderWidth: 2,
+  });
+
+  // Actual Sales (past data)
+  datasets.push({
+    label: 'Actual Sales',
+    data: data.actual,
+    borderColor: 'rgba(255,255,255,0.5)',
+    borderWidth: 2,
+    backgroundColor: 'transparent',
+    fill: false,
+    tension: 0.4,
+    pointRadius: 3,
+    pointBackgroundColor: 'rgba(255,255,255,0.7)',
+    pointHoverRadius: 6,
+    borderDash: [],
+    spanGaps: false,
+  });
+
+  return datasets;
+}
+
+function updateChart() {
+  if (!state.forecastChart) return;
+  const data = FORECAST_DATA[state.currentProduct];
+  const ctx = state.forecastChart.ctx;
+  state.forecastChart.data.datasets = buildDatasets(data, ctx);
+  state.forecastChart.data.labels = data.labels30;
+  state.forecastChart.update('active');
+  updateChartColor(data.color);
+}
+
+function updateChartColor(color) {
+  // Update CI legend visibility
+  const legendCI = document.getElementById('legendCI');
+  const legendFestival = document.getElementById('legendFestival');
+  if (legendCI) legendCI.style.display = state.ciEnabled ? 'flex' : 'none';
+  if (legendFestival) legendFestival.style.display = state.festivalEnabled ? 'flex' : 'none';
+}
+
+// ─── TOGGLE HANDLERS ──────────────────────────────────────────────
+function toggleConfidenceInterval(enabled) {
+  state.ciEnabled = enabled;
+  updateChart();
+  showToast(enabled ? '95% Confidence Interval enabled' : 'Confidence Interval hidden');
+}
+
+function toggleFestivalImpact(enabled) {
+  state.festivalEnabled = enabled;
+  updateChart();
+  showToast(enabled ? 'Festival & Weather impact applied ✨' : 'Festival impact removed');
+}
+
+// ─── TIMEFRAME ────────────────────────────────────────────────────
+function setTimeframe(tf, btn) {
+  state.currentTimeframe = tf;
+  document.querySelectorAll('.tf-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  updateChart();
+}
+
+// ─── PRODUCT SWITCH ────────────────────────────────────────────────
+function switchProduct(product) {
+  state.currentProduct = product;
+  updateChart();
+  // Update stockout marker
+  const marker = document.getElementById('stockoutMarker');
+  if (marker) {
+    marker.style.display = FORECAST_DATA[product].stockout ? 'flex' : 'none';
+  }
+}
+
+// ─── DRAG & DROP UPLOAD ────────────────────────────────────────────
+function handleDragOver(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('uploadZone').classList.add('drag-over');
+}
+
+function handleDragLeave(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('uploadZone').classList.remove('drag-over');
+  const files = e.dataTransfer.files;
+  if (files.length > 0) {
+    processFile(files[0]);
+  }
+}
+
+function triggerFileUpload() {
+  document.getElementById('fileInput').click();
+}
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) processFile(file);
+}
+
+function processFile(file) {
+  const validTypes = ['.csv', '.xlsx', '.xls'];
+  const ext = '.' + file.name.split('.').pop().toLowerCase();
+  if (!validTypes.includes(ext)) {
+    showToast('Please upload a CSV or Excel file', 'error');
+    return;
+  }
+
+  // Show progress overlay
+  const progressEl = document.getElementById('uploadProgress');
+  const fillEl = document.getElementById('progressBarFill');
+  const pctEl = document.getElementById('progressPct');
+
+  progressEl.classList.add('visible');
+
+  let pct = 0;
+  const msgs = ['Reading file structure...', 'Cleaning data...', 'Training LSTM model...', 'Generating forecast...', 'Finalizing predictions...'];
+  let msgIdx = 0;
+
+  const interval = setInterval(() => {
+    pct += Math.random() * 18;
+    if (pct >= 100) {
+      pct = 100;
+      clearInterval(interval);
+      setTimeout(() => {
+        progressEl.classList.remove('visible');
+        openModal();
+      }, 400);
+    }
+    fillEl.style.width = pct + '%';
+    pctEl.textContent = Math.floor(pct) + '%';
+
+    if (pct > (msgIdx + 1) * 20 && msgIdx < msgs.length - 1) {
+      msgIdx++;
+      const textEl = progressEl.querySelector('.progress-text');
+      if (textEl) textEl.textContent = msgs[msgIdx];
+    }
+  }, 200);
+}
+
+// ─── BRANCH DROPDOWN ──────────────────────────────────────────────
+function toggleDropdown() {
+  const menu = document.getElementById('dropdownMenu');
+  const chevron = document.getElementById('chevronIcon');
+  const isOpen = menu.classList.contains('open');
+
+  if (isOpen) {
+    menu.classList.remove('open');
+    chevron.classList.remove('rotated');
+  } else {
+    menu.classList.add('open');
+    chevron.classList.add('rotated');
+  }
+}
+
+function selectBranch(name, el) {
+  document.querySelectorAll('.dropdown-item').forEach(item => item.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelector('.branch-main').textContent = name;
+  toggleDropdown();
+  showToast(`Switched to: ${name}`);
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', function(e) {
+  const dropdown = document.getElementById('branchDropdown');
+  if (dropdown && !dropdown.contains(e.target)) {
+    const menu = document.getElementById('dropdownMenu');
+    const chevron = document.getElementById('chevronIcon');
+    if (menu) menu.classList.remove('open');
+    if (chevron) chevron.classList.remove('rotated');
+  }
 });
 
-/* ============================================================
-   NAVBAR SCROLL BEHAVIOR
-   ============================================================ */
-function initNavbar() {
-    const navbar = document.getElementById('navbar');
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 60) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
-        }
-    });
-
-    // Smooth scroll for nav links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
-            const href = this.getAttribute('href');
-            if (href === '#') return;
-            e.preventDefault();
-            const target = document.querySelector(href);
-            if (target) {
-                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        });
-    });
+// ─── WHATSAPP ─────────────────────────────────────────────────────
+function sendWhatsApp() {
+  const msg = encodeURIComponent(
+    `🚨 *CRITICAL STOCK ALERT - MSME Demand Forecaster*\n\n` +
+    `📦 *Product:* Smartwatches\n` +
+    `⚠️ *Status:* Stockout in 3 Days!\n` +
+    `📉 Current Stock: 20 units\n` +
+    `📈 Predicted Demand: 85 units\n` +
+    `💸 Revenue at Risk: ₹18,200\n\n` +
+    `Please arrange immediate reorder of minimum 150 units.\n\n` +
+    `_Sent via MSME Demand Forecaster AI_`
+  );
+  window.open(`https://wa.me/?text=${msg}`, '_blank');
+  showToast('WhatsApp alert prepared! ✓');
 }
 
-/* ============================================================
-   MOBILE NAV
-   ============================================================ */
-function initMobileNav() {
-    const hamburger = document.getElementById('hamburger');
-    if (!hamburger) return;
+// ─── TOAST ────────────────────────────────────────────────────────
+let toastTimeout;
+function showToast(msg, type = 'success') {
+  const toast = document.getElementById('toast');
+  const toastMsg = document.getElementById('toastMsg');
+  if (!toast) return;
 
-    let mobileMenu = null;
-
-    hamburger.addEventListener('click', () => {
-        if (mobileMenu) {
-            mobileMenu.remove();
-            mobileMenu = null;
-            return;
-        }
-        mobileMenu = document.createElement('div');
-        mobileMenu.style.cssText = `
-            position: fixed; top: 70px; left: 0; right: 0;
-            background: rgba(2, 8, 23, 0.97);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            padding: 1.5rem 2rem;
-            z-index: 999;
-            display: flex; flex-direction: column; gap: 1rem;
-        `;
-        ['Features', 'Live Queue', 'How It Works', 'Impact', 'AI Engine'].forEach((link, i) => {
-            const anchors = ['#features', '#tracker', '#how-it-works', '#impact', '#predictive'];
-            const a = document.createElement('a');
-            a.href = anchors[i];
-            a.textContent = link;
-            a.style.cssText = 'color: rgba(240,246,255,0.8); font-size: 1rem; font-weight: 500; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);';
-            a.addEventListener('click', () => { mobileMenu.remove(); mobileMenu = null; });
-            mobileMenu.appendChild(a);
-        });
-        document.body.appendChild(mobileMenu);
-    });
+  toastMsg.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3000);
 }
 
-/* ============================================================
-   PARTICLE SYSTEM
-   ============================================================ */
-function initParticles() {
-    const container = document.getElementById('particles');
-    if (!container) return;
-
-    const colors = ['rgba(0, 212, 170, 0.6)', 'rgba(102, 126, 234, 0.5)', 'rgba(0, 240, 192, 0.4)'];
-    const count = 25;
-
-    for (let i = 0; i < count; i++) {
-        const particle = document.createElement('div');
-        particle.classList.add('particle');
-        const size = Math.random() * 4 + 1;
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        const duration = Math.random() * 15 + 10;
-        const delay = Math.random() * 15;
-        const left = Math.random() * 100;
-
-        particle.style.cssText = `
-            width: ${size}px; height: ${size}px;
-            background: ${color};
-            left: ${left}%;
-            bottom: 0;
-            animation-duration: ${duration}s;
-            animation-delay: ${delay}s;
-            box-shadow: 0 0 ${size * 2}px ${color};
-        `;
-        container.appendChild(particle);
-    }
+// ─── MODAL ────────────────────────────────────────────────────────
+function openModal() {
+  const overlay = document.getElementById('modalOverlay');
+  if (overlay) overlay.classList.add('open');
+}
+function closeModal() {
+  const overlay = document.getElementById('modalOverlay');
+  if (overlay) overlay.classList.remove('open');
 }
 
-/* ============================================================
-   HERO CANVAS — THREE.JS BACKGROUND
-   ============================================================ */
-function initHeroCanvas() {
-    const canvas = document.getElementById('hero-canvas');
-    if (!canvas || typeof THREE === 'undefined') return;
-
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(window.innerWidth, window.innerHeight);
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 5;
-
-    // Grid of dots
-    const geometry = new THREE.BufferGeometry();
-    const count = 800;
-    const positions = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
-
-    for (let i = 0; i < count; i++) {
-        positions[i * 3] = (Math.random() - 0.5) * 20;
-        positions[i * 3 + 1] = (Math.random() - 0.5) * 20;
-        positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
-
-        // Teal or purple
-        const isTeal = Math.random() > 0.5;
-        colors[i * 3] = isTeal ? 0 : 0.4;
-        colors[i * 3 + 1] = isTeal ? 0.83 : 0.49;
-        colors[i * 3 + 2] = isTeal ? 0.67 : 0.92;
-    }
-
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-    const material = new THREE.PointsMaterial({
-        size: 0.05,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.6,
-    });
-
-    const points = new THREE.Points(geometry, material);
-    scene.add(points);
-
-    // Floating geometric shapes
-    const shapes = [];
-    const shapeGeo = [
-        new THREE.OctahedronGeometry(0.3),
-        new THREE.TetrahedronGeometry(0.25),
-        new THREE.IcosahedronGeometry(0.2),
-    ];
-
-    for (let i = 0; i < 6; i++) {
-        const geo = shapeGeo[i % 3];
-        const mat = new THREE.MeshBasicMaterial({
-            color: i % 2 === 0 ? 0x00d4aa : 0x667eea,
-            wireframe: true,
-            opacity: 0.15,
-            transparent: true,
-        });
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.position.set(
-            (Math.random() - 0.5) * 10,
-            (Math.random() - 0.5) * 10,
-            (Math.random() - 0.5) * 5
-        );
-        mesh.userData = {
-            rotX: (Math.random() - 0.5) * 0.01,
-            rotY: (Math.random() - 0.5) * 0.01,
-            floatSpeed: Math.random() * 0.001 + 0.0005,
-            floatOffset: Math.random() * Math.PI * 2,
-        };
-        scene.add(mesh);
-        shapes.push(mesh);
-    }
-
-    // Mouse parallax
-    let mouseX = 0, mouseY = 0;
-    document.addEventListener('mousemove', (e) => {
-        mouseX = (e.clientX / window.innerWidth - 0.5) * 0.5;
-        mouseY = (e.clientY / window.innerHeight - 0.5) * 0.5;
-    });
-
-    // Animation loop
-    let time = 0;
-    function animate() {
-        requestAnimationFrame(animate);
-        time += 0.001;
-
-        points.rotation.y += 0.0003;
-        points.rotation.x += 0.0001;
-
-        shapes.forEach(shape => {
-            shape.rotation.x += shape.userData.rotX;
-            shape.rotation.y += shape.userData.rotY;
-            shape.position.y += Math.sin(time * 1000 * shape.userData.floatSpeed + shape.userData.floatOffset) * 0.003;
-        });
-
-        camera.position.x += (mouseX - camera.position.x) * 0.02;
-        camera.position.y += (-mouseY - camera.position.y) * 0.02;
-        camera.lookAt(scene.position);
-
-        renderer.render(scene, camera);
-    }
-    animate();
-
-    window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+// ─── MINI BARS (Power Banks) ──────────────────────────────────────
+function initMiniBars() {
+  const container = document.getElementById('miniBarsPB');
+  if (!container) return;
+  const vals = [45, 60, 52, 72, 68, 85, 78];
+  const max = Math.max(...vals);
+  container.innerHTML = vals.map(v => {
+    const pct = (v / max) * 100;
+    return `<div class="mini-bar" style="height:${pct}%" title="${v} units"></div>`;
+  }).join('');
 }
 
-/* ============================================================
-   SCROLL REVEAL
-   ============================================================ */
-function initScrollReveal() {
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-            }
-        });
-    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-
-    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+// ─── REVENUE SPARKLINE ────────────────────────────────────────────
+function initRevenueSparkline() {
+  const container = document.getElementById('revenueSparkline');
+  if (!container) return;
+  const vals = [22000, 28000, 25000, 31000, 29000, 35000, 32500];
+  const max = Math.max(...vals);
+  container.style.display = 'flex';
+  container.style.gap = '3px';
+  container.style.alignItems = 'flex-end';
+  container.innerHTML = vals.map((v, i) => {
+    const pct = (v / max) * 100;
+    const isLast = i === vals.length - 1;
+    return `<div style="
+      flex:1;
+      height:${pct}%;
+      background: ${isLast ? 'var(--red)' : 'rgba(191,95,255,0.4)'};
+      border-radius: 2px 2px 0 0;
+      min-height: 4px;
+      ${isLast ? 'box-shadow: 0 0 8px rgba(255,34,68,0.5);' : ''}
+    "></div>`;
+  }).join('');
 }
 
-/* ============================================================
-   COUNTER ANIMATIONS
-   ============================================================ */
-function initCounters() {
-    // Hero stats
-    const statNums = document.querySelectorAll('.stat-number[data-count]');
-    const statObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                animateCounter(entry.target, parseInt(entry.target.dataset.count));
-                statObserver.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.5 });
-    statNums.forEach(el => statObserver.observe(el));
-
-    // Impact section
-    const countUps = document.querySelectorAll('.count-up[data-target]');
-    const impactObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                animateCounter(entry.target, parseInt(entry.target.dataset.target));
-                impactObserver.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.5 });
-    countUps.forEach(el => impactObserver.observe(el));
-}
-
-function animateCounter(el, target) {
-    const duration = 2000;
-    const start = performance.now();
-    const easeOut = t => 1 - Math.pow(1 - t, 3);
-
-    function update(now) {
-        const elapsed = now - start;
-        const progress = Math.min(elapsed / duration, 1);
-        el.textContent = Math.round(easeOut(progress) * target);
-        if (progress < 1) requestAnimationFrame(update);
-    }
-    requestAnimationFrame(update);
-}
-
-/* ============================================================
-   IMPACT BARS
-   ============================================================ */
-function initImpactBars() {
-    const bars = document.querySelectorAll('.impact-bar-fill');
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                setTimeout(() => {
-                    entry.target.style.width = entry.target.dataset.width + '%';
-                }, 300);
-                observer.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.3 });
-    bars.forEach(bar => observer.observe(bar));
-}
-
-/* ============================================================
-   LIVE CLOCK
-   ============================================================ */
-function initClock() {
-    const timeEl = document.getElementById('current-time');
-    const dateEl = document.getElementById('current-date');
-
-    const now = new Date();
-    if (dateEl) {
-        dateEl.textContent = now.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-    }
-
-    function updateTime() {
-        if (timeEl) {
-            const d = new Date();
-            timeEl.textContent = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        }
-    }
-    updateTime();
-    setInterval(updateTime, 1000);
-
-    // Serving timer countdown
-    const timerEl = document.getElementById('serving-timer');
-    let servingSeconds = 272;
-    setInterval(() => {
-        if (timerEl) {
-            servingSeconds++;
-            const m = Math.floor(servingSeconds / 60);
-            const s = servingSeconds % 60;
-            timerEl.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-        }
-    }, 1000);
-}
-
-/* ============================================================
-   QUEUE SYSTEM
-   ============================================================ */
-const queueData = {
-    general: [
-        { token: 'A45', name: 'Priya M.', wait: '~3 min', initials: 'PM', color: '#667eea' },
-        { token: 'A46', name: 'Rohan S.', wait: '~8 min', initials: 'RS', color: '#00d4aa' },
-        { token: 'A47', name: 'Anita K.', wait: '~13 min', initials: 'AK', color: '#9c59d1' },
-        { token: 'A48', name: 'Vikram J.', wait: '~18 min', initials: 'VJ', color: '#f093fb' },
-        { token: 'A49', name: 'Sunita R.', wait: '~23 min', initials: 'SR', color: '#4facfe' },
-        { token: 'A50', name: 'Deepak P.', wait: '~28 min', initials: 'DP', color: '#43e97b' },
-        { token: 'A51', name: 'Meena T.', wait: '~33 min', initials: 'MT', color: '#fa709a' },
-        { token: 'A52', name: 'Arjun N.', wait: '~38 min', initials: 'AN', color: '#00d4aa' },
-    ],
-    cardio: [
-        { token: 'B12', name: 'Ravi K.', wait: '~5 min', initials: 'RK', color: '#f093fb' },
-        { token: 'B13', name: 'Geeta S.', wait: '~15 min', initials: 'GS', color: '#4facfe' },
-        { token: 'B14', name: 'Mohan V.', wait: '~25 min', initials: 'MV', color: '#43e97b' },
-        { token: 'B15', name: 'Lakshmi R.', wait: '~35 min', initials: 'LR', color: '#667eea' },
-        { token: 'B16', name: 'Sanjay K.', wait: '~45 min', initials: 'SK', color: '#fa709a' },
-    ],
-    ortho: [
-        { token: 'C08', name: 'Amit B.', wait: '~7 min', initials: 'AB', color: '#43e97b' },
-        { token: 'C09', name: 'Neha J.', wait: '~20 min', initials: 'NJ', color: '#fa709a' },
-        { token: 'C10', name: 'Rahul G.', wait: '~33 min', initials: 'RG', color: '#00d4aa' },
-    ],
-};
-
-let currentDept = 'general';
-let emergencyActive = false;
-
-function initQueueSystem() {
-    renderQueue(currentDept);
-    // Simulate live updates every 15 seconds
-    setInterval(() => simulateQueueUpdate(), 15000);
-}
-
-function renderQueue(dept) {
-    const grid = document.getElementById('queue-grid');
-    if (!grid) return;
-    const data = queueData[dept];
-    grid.innerHTML = '';
-
-    data.forEach((patient, idx) => {
-        const item = document.createElement('div');
-        item.className = 'queue-item';
-        if (patient.emergency) item.classList.add('emergency-item');
-        item.innerHTML = `
-            ${patient.emergency ? '<div class="emergency-badge">EMRG</div>' : ''}
-            <div class="qi-avatar" style="border-color: ${patient.color}; color: ${patient.color};">${patient.initials}</div>
-            <div class="qi-token">${patient.token}</div>
-            <div class="qi-name">${patient.name}</div>
-            <div class="qi-wait"><i class="fas fa-clock"></i> ${patient.wait}</div>
-        `;
-        item.style.animationDelay = `${idx * 0.05}s`;
-        grid.appendChild(item);
-    });
-
-    document.getElementById('total-waiting').textContent = data.filter(p => !p.served).length;
-}
-
-window.switchDept = function(dept) {
-    currentDept = dept;
-    document.querySelectorAll('.dash-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-
-    const headers = { general: 'General Medicine', cardio: 'Cardiology', ortho: 'Orthopedics' };
-    document.querySelector('.dash-title h3').textContent = `OPD Queue — ${headers[dept]}`;
-    renderQueue(dept);
-};
-
-function simulateQueueUpdate() {
-    const data = queueData[currentDept];
-    if (data.length === 0) return;
-    // Slightly randomize wait times
-    data.forEach((p, i) => {
-        const baseWait = (i + 1) * 5 + Math.floor(Math.random() * 3);
-        p.wait = `~${baseWait} min`;
-    });
-    renderQueue(currentDept);
-}
-
-// Emergency override simulation
-window.triggerEmergency = function() {
-    if (emergencyActive) return;
-    emergencyActive = true;
-
-    const btn = document.getElementById('emergency-btn');
-    btn.classList.add('triggered');
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing Emergency...';
-    btn.disabled = true;
-
-    const emergencyPatient = {
-        token: '🚨 E01', name: 'CRITICAL — TRAUMA', wait: 'PRIORITY',
-        initials: '!', color: '#ff6b6b', emergency: true
-    };
-
-    setTimeout(() => {
-        // Insert emergency patient at front
-        const data = queueData[currentDept];
-        data.unshift(emergencyPatient);
-        // Recalculate wait times
-        data.forEach((p, i) => {
-            if (!p.emergency) p.wait = `~${(i + 1) * 5 + 12} min`;
-        });
-        renderQueue(currentDept);
-
-        // Update total count
-        document.getElementById('total-waiting').textContent = data.length;
-
-        // Show notification
-        showNotification('⚠️ Emergency Override Active', 'Queue reordered. All patients notified of ~12min delay.');
-
-        btn.innerHTML = '<i class="fas fa-check-circle"></i> Emergency Override Active';
-        btn.style.borderColor = 'rgba(255,107,107,0.8)';
-
-        // Reset after 8 seconds
-        setTimeout(() => {
-            const idx = queueData[currentDept].findIndex(p => p.emergency);
-            if (idx > -1) queueData[currentDept].splice(idx, 1);
-            queueData[currentDept].forEach((p, i) => {
-                p.wait = `~${(i + 1) * 5} min`;
-            });
-            renderQueue(currentDept);
-            btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Simulate Emergency Override';
-            btn.disabled = false;
-            btn.classList.remove('triggered');
-            btn.style.borderColor = '';
-            emergencyActive = false;
-            showNotification('✅ Emergency Resolved', 'Queue normalized. Regular schedule resumed.');
-        }, 8000);
-    }, 1500);
-};
-
-function showNotification(title, message) {
-    const notif = document.createElement('div');
-    notif.style.cssText = `
-        position: fixed; bottom: 2rem; right: 2rem; z-index: 10000;
-        background: rgba(10, 22, 40, 0.95);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(0, 212, 170, 0.3);
-        border-radius: 12px; padding: 1rem 1.5rem;
-        max-width: 320px;
-        box-shadow: 0 0 30px rgba(0, 212, 170, 0.15), 0 8px 32px rgba(0,0,0,0.4);
-        animation: slide-in-notif 0.5s ease;
-        font-family: 'Inter', sans-serif;
-    `;
-    notif.innerHTML = `
-        <div style="font-weight: 700; font-size: 0.9rem; color: #f0f6ff; margin-bottom: 0.3rem;">${title}</div>
-        <div style="font-size: 0.8rem; color: rgba(240,246,255,0.7);">${message}</div>
-    `;
-    document.body.appendChild(notif);
-
-    const style = document.createElement('style');
-    style.textContent = `@keyframes slide-in-notif { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`;
-    document.head.appendChild(style);
-
-    setTimeout(() => {
-        notif.style.transition = 'all 0.5s ease';
-        notif.style.opacity = '0';
-        notif.style.transform = 'translateX(120%)';
-        setTimeout(() => notif.remove(), 500);
-    }, 4000);
-}
-
-/* ============================================================
-   DOCTOR PANEL
-   ============================================================ */
-const doctors = [
-    { name: 'Dr. Priya Sharma', dept: 'General Medicine', initials: 'PS', status: 'available', patients: 12 },
-    { name: 'Dr. Arjun Mehta', dept: 'General Medicine', initials: 'AM', status: 'busy', patients: 8 },
-    { name: 'Dr. Kavya Reddy', dept: 'Cardiology', initials: 'KR', status: 'available', patients: 15 },
-    { name: 'Dr. Suresh Babu', dept: 'Cardiology', initials: 'SB', status: 'break', patients: 6 },
-    { name: 'Dr. Roshni Patel', dept: 'Orthopedics', initials: 'RP', status: 'available', patients: 9 },
-    { name: 'Dr. Vikram Nair', dept: 'Orthopedics', initials: 'VN', status: 'busy', patients: 11 },
-    { name: 'Dr. Lakshmi Devi', dept: 'Pediatrics', initials: 'LD', status: 'available', patients: 14 },
-    { name: 'Dr. Anil Kumar', dept: 'ENT', initials: 'AK', status: 'busy', patients: 7 },
+// ─── INVENTORY TABLE ─────────────────────────────────────────────
+const INVENTORY = [
+  { product: 'Smartwatches', icon: '⌚', category: 'Wearables', stock: 20, demand7: 28, forecast30: 85, daysLeft: 3, status: 'critical' },
+  { product: 'Power Banks', icon: '🔋', category: 'Accessories', stock: 145, demand7: 32, forecast30: 200, daysLeft: 10, status: 'warning' },
+  { product: 'Earbuds', icon: '🎧', category: 'Audio', stock: 310, demand7: 48, forecast30: 290, daysLeft: 22, status: 'good' },
+  { product: 'USB Cables', icon: '🔌', category: 'Accessories', stock: 520, demand7: 85, forecast30: 480, daysLeft: 18, status: 'ok' },
+  { product: 'Phone Cases', icon: '📱', category: 'Protection', stock: 880, demand7: 62, forecast30: 550, daysLeft: 40, status: 'good' },
+  { product: 'Screen Guards', icon: '🛡️', category: 'Protection', stock: 1200, demand7: 90, forecast30: 680, daysLeft: 38, status: 'good' },
+  { product: 'Laptop Bags', icon: '💼', category: 'Bags', stock: 85, demand7: 22, forecast30: 140, daysLeft: 11, status: 'warning' },
+  { product: 'Smart Speakers', icon: '🔊', category: 'Audio', stock: 44, demand7: 18, forecast30: 65, daysLeft: 7, status: 'warning' },
 ];
 
-function initDoctorPanel() {
-    const grid = document.getElementById('doctors-grid');
-    if (!grid) return;
+const STATUS_CONFIG = {
+  critical: { label: 'Critical', cls: 'pill-critical', icon: '🔴' },
+  warning: { label: 'Reorder Soon', cls: 'pill-warning', icon: '🟡' },
+  ok: { label: 'Adequate', cls: 'pill-ok', icon: '🟢' },
+  good: { label: 'Well Stocked', cls: 'pill-good', icon: '🔵' },
+};
 
-    doctors.forEach((doc, i) => {
-        const card = document.createElement('div');
-        card.className = 'doctor-card';
-        const statusLabels = { available: 'Available', busy: 'In Consultation', break: 'On Break' };
-        card.innerHTML = `
-            <div class="doc-avatar">${doc.initials}</div>
-            <div class="doc-info">
-                <div class="doc-name">${doc.name}</div>
-                <div class="doc-dept">${doc.dept}</div>
-            </div>
-            <div class="doc-status ${doc.status}" id="doc-status-${i}">${statusLabels[doc.status]}</div>
-        `;
-        // Click to toggle status
-        card.style.cursor = 'pointer';
-        card.addEventListener('click', () => {
-            const statuses = ['available', 'busy', 'break'];
-            const statusEl = document.getElementById(`doc-status-${i}`);
-            const current = statuses.indexOf(doc.status);
-            doc.status = statuses[(current + 1) % statuses.length];
-            statusEl.className = `doc-status ${doc.status}`;
-            statusEl.textContent = statusLabels[doc.status];
-        });
-        grid.appendChild(card);
-    });
+function renderTable(data) {
+  const tbody = document.getElementById('tableBody');
+  if (!tbody) return;
 
-    // Simulate availability changes
-    setInterval(() => {
-        const randomDoc = doctors[Math.floor(Math.random() * doctors.length)];
-        const statuses = ['available', 'busy'];
-        const statusLabels = { available: 'Available', busy: 'In Consultation', break: 'On Break' };
-        const i = doctors.indexOf(randomDoc);
-        randomDoc.status = statuses[Math.floor(Math.random() * statuses.length)];
-        const statusEl = document.getElementById(`doc-status-${i}`);
-        if (statusEl) {
-            statusEl.className = `doc-status ${randomDoc.status}`;
-            statusEl.textContent = statusLabels[randomDoc.status];
-        }
-    }, 8000);
+  tbody.innerHTML = data.map(row => {
+    const cfg = STATUS_CONFIG[row.status];
+    return `
+      <tr>
+        <td>
+          <div class="product-cell">
+            <div class="product-icon">${row.icon}</div>
+            <span style="font-weight:600;color:var(--text-primary)">${row.product}</span>
+          </div>
+        </td>
+        <td>${row.category}</td>
+        <td style="color:${row.stock < 50 ? 'var(--red)' : 'var(--text-secondary)'};font-weight:${row.stock < 50 ? '700' : '400'}">${row.stock}</td>
+        <td>${row.demand7}</td>
+        <td>${row.forecast30}</td>
+        <td style="color:${row.daysLeft <= 7 ? 'var(--red)' : row.daysLeft <= 14 ? 'var(--yellow)' : 'var(--green)'};font-weight:600">${row.daysLeft}d</td>
+        <td><span class="status-pill ${cfg.cls}">${cfg.icon} ${cfg.label}</span></td>
+        <td><a class="action-link" onclick="handleAction('${row.product}')">Reorder ↗</a></td>
+      </tr>
+    `;
+  }).join('');
 }
 
-/* ============================================================
-   CHARTS
-   ============================================================ */
-function initCharts() {
-    initWeeklyChart();
-    initDeptChart();
+function filterTable(query) {
+  const lower = query.toLowerCase();
+  const filtered = INVENTORY.filter(row =>
+    row.product.toLowerCase().includes(lower) ||
+    row.category.toLowerCase().includes(lower)
+  );
+  renderTable(filtered);
 }
 
-function initWeeklyChart() {
-    const canvas = document.getElementById('weeklyChart');
-    if (!canvas) return;
-
-    const labels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    const waitTimes = [34, 28, 26, 20, 25, 30, 18];
-    const queueVol = [145, 118, 112, 88, 105, 130, 72];
-
-    new Chart(canvas, {
-        type: 'bar',
-        data: {
-            labels,
-            datasets: [
-                {
-                    label: 'Avg Wait (min)',
-                    data: waitTimes,
-                    backgroundColor: 'rgba(0, 212, 170, 0.2)',
-                    borderColor: 'rgba(0, 212, 170, 0.8)',
-                    borderWidth: 2,
-                    borderRadius: 6,
-                    yAxisID: 'y1',
-                },
-                {
-                    label: 'Queue Volume',
-                    data: queueVol,
-                    type: 'line',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    borderColor: 'rgba(102, 126, 234, 0.8)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: 'rgba(102, 126, 234, 1)',
-                    pointRadius: 4,
-                    yAxisID: 'y2',
-                },
-            ],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: 'rgba(10, 22, 40, 0.9)',
-                    borderColor: 'rgba(0, 212, 170, 0.3)',
-                    borderWidth: 1,
-                    titleColor: '#f0f6ff',
-                    bodyColor: 'rgba(240, 246, 255, 0.7)',
-                    padding: 12,
-                    cornerRadius: 8,
-                },
-            },
-            scales: {
-                x: {
-                    grid: { color: 'rgba(255,255,255,0.04)' },
-                    ticks: { color: 'rgba(240,246,255,0.5)', font: { size: 11 } },
-                },
-                y1: {
-                    type: 'linear', position: 'left',
-                    grid: { color: 'rgba(255,255,255,0.04)' },
-                    ticks: { color: 'rgba(240,246,255,0.5)', font: { size: 11 } },
-                },
-                y2: {
-                    type: 'linear', position: 'right',
-                    grid: { display: false },
-                    ticks: { color: 'rgba(240,246,255,0.5)', font: { size: 11 } },
-                },
-            },
-        },
-    });
+function handleAction(product) {
+  showToast(`Reorder initiated for ${product}!`);
 }
 
-function initDeptChart() {
-    const canvas = document.getElementById('deptChart');
-    if (!canvas) return;
-
-    new Chart(canvas, {
-        type: 'radar',
-        data: {
-            labels: ['General Med', 'Cardiology', 'Orthopedics', 'Pediatrics', 'ENT', 'Dermatology'],
-            datasets: [{
-                label: 'Efficiency Score',
-                data: [92, 78, 85, 94, 80, 88],
-                backgroundColor: 'rgba(0, 212, 170, 0.1)',
-                borderColor: 'rgba(0, 212, 170, 0.6)',
-                borderWidth: 2,
-                pointBackgroundColor: 'rgba(0, 212, 170, 1)',
-                pointRadius: 4,
-            }, {
-                label: 'Last Month',
-                data: [78, 65, 72, 80, 68, 74],
-                backgroundColor: 'rgba(102, 126, 234, 0.08)',
-                borderColor: 'rgba(102, 126, 234, 0.4)',
-                borderWidth: 1.5,
-                pointBackgroundColor: 'rgba(102, 126, 234, 0.8)',
-                pointRadius: 3,
-                borderDash: [4, 4],
-            }],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    labels: { color: 'rgba(240,246,255,0.6)', font: { size: 11 }, boxWidth: 12 }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(10, 22, 40, 0.9)',
-                    borderColor: 'rgba(0, 212, 170, 0.3)',
-                    borderWidth: 1,
-                    titleColor: '#f0f6ff',
-                    bodyColor: 'rgba(240, 246, 255, 0.7)',
-                    padding: 10,
-                    cornerRadius: 8,
-                },
-            },
-            scales: {
-                r: {
-                    grid: { color: 'rgba(255,255,255,0.06)' },
-                    angleLines: { color: 'rgba(255,255,255,0.06)' },
-                    ticks: { display: false },
-                    pointLabels: { color: 'rgba(240,246,255,0.6)', font: { size: 11 } },
-                    min: 0, max: 100,
-                },
-            },
-        },
-    });
+// ─── DATE ─────────────────────────────────────────────────────────
+function updateDate() {
+  const el = document.getElementById('currentDate');
+  if (!el) return;
+  const now = new Date();
+  el.textContent = now.toLocaleDateString('en-IN', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
 }
 
-/* ============================================================
-   PREDICTION CHART
-   ============================================================ */
-function initPredictionChart() {
-    const canvas = document.getElementById('predictionChart');
-    if (!canvas) return;
-
-    const hours = ['8AM', '9AM', '10AM', '11AM', '12PM', '1PM', '2PM', '3PM', '4PM', '5PM'];
-    const predicted = [18, 32, 48, 52, 38, 28, 35, 42, 30, 20];
-    const actual = [20, 35, null, null, null, null, null, null, null, null]; // only known hours
-
-    new Chart(canvas, {
-        type: 'line',
-        data: {
-            labels: hours,
-            datasets: [
-                {
-                    label: 'Predicted Load',
-                    data: predicted,
-                    borderColor: 'rgba(0, 212, 170, 0.8)',
-                    backgroundColor: 'rgba(0, 212, 170, 0.08)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 3,
-                    pointBackgroundColor: 'rgba(0, 212, 170, 1)',
-                    borderDash: [6, 3],
-                },
-                {
-                    label: 'Actual Load',
-                    data: actual,
-                    borderColor: 'rgba(102, 126, 234, 1)',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    borderWidth: 2.5,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 5,
-                    pointBackgroundColor: 'rgba(102, 126, 234, 1)',
-                    spanGaps: false,
-                },
-            ],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    labels: { color: 'rgba(240,246,255,0.6)', font: { size: 10 }, boxWidth: 10 }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(10, 22, 40, 0.9)',
-                    borderColor: 'rgba(0, 212, 170, 0.3)',
-                    borderWidth: 1,
-                    titleColor: '#f0f6ff',
-                    bodyColor: 'rgba(240, 246, 255, 0.7)',
-                    padding: 8,
-                    cornerRadius: 6,
-                },
-            },
-            scales: {
-                x: {
-                    grid: { color: 'rgba(255,255,255,0.04)' },
-                    ticks: { color: 'rgba(240,246,255,0.5)', font: { size: 10 } },
-                },
-                y: {
-                    grid: { color: 'rgba(255,255,255,0.04)' },
-                    ticks: { color: 'rgba(240,246,255,0.5)', font: { size: 10 } },
-                    beginAtZero: true,
-                },
-            },
-        },
-    });
+// ─── COUNTER ANIMATION ────────────────────────────────────────────
+function animateCounter(el, target, duration = 1500, prefix = '') {
+  if (!el) return;
+  const start = 0;
+  const startTime = performance.now();
+  function update(time) {
+    const elapsed = time - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = Math.floor(eased * target);
+    el.textContent = current.toLocaleString('en-IN');
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
 }
 
-/* ============================================================
-   QR GRID GENERATOR
-   ============================================================ */
-function initQRGrid() {
-    const grid = document.querySelector('.qr-grid');
-    if (!grid) return;
-
-    grid.innerHTML = '';
-    // Generate a fake QR pattern
-    const pattern = [
-        1,1,1,0,1,1,1,
-        1,0,1,0,1,0,1,
-        1,0,1,1,0,1,1,
-        0,1,0,0,0,1,0,
-        1,1,0,1,1,0,1,
-        1,0,0,0,1,1,1,
-        1,1,1,0,0,0,1,
-    ];
-
-    pattern.forEach(cell => {
-        const div = document.createElement('div');
-        div.style.cssText = `
-            border-radius: 1px;
-            background: ${cell ? '#020817' : 'transparent'};
-        `;
-        grid.appendChild(div);
-    });
-}
-
-/* ============================================================
-   PARALLAX ON SCROLL
-   ============================================================ */
+// ─── NAVBAR SCROLL EFFECT ─────────────────────────────────────────
 window.addEventListener('scroll', () => {
-    const scrollY = window.scrollY;
-    const heroContent = document.querySelector('.hero-content');
-    const heroVisual = document.querySelector('.hero-visual');
-
-    if (heroContent && scrollY < window.innerHeight) {
-        heroContent.style.transform = `translateY(${scrollY * 0.15}px)`;
-        heroContent.style.opacity = 1 - scrollY / (window.innerHeight * 0.8);
+  const navbar = document.getElementById('navbar');
+  if (navbar) {
+    if (window.scrollY > 20) {
+      navbar.style.boxShadow = '0 4px 40px rgba(0, 0, 0, 0.6)';
+    } else {
+      navbar.style.boxShadow = '0 4px 40px rgba(0, 245, 255, 0.06)';
     }
-    if (heroVisual && scrollY < window.innerHeight) {
-        heroVisual.style.transform = `translateY(${scrollY * 0.08}px)`;
-    }
+  }
 });
 
-/* ============================================================
-   HOVER TILT EFFECT ON CARDS
-   ============================================================ */
-document.addEventListener('mousemove', (e) => {
-    const cards = document.querySelectorAll('.feature-card, .step-card, .impact-card, .testimonial-card');
-    cards.forEach(card => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
-            const rotX = ((y / rect.height) - 0.5) * 6;
-            const rotY = ((x / rect.width) - 0.5) * -6;
-            card.style.transform = `perspective(800px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateY(-4px)`;
-        } else {
-            card.style.transform = '';
-        }
-    });
-});
-
-/* ============================================================
-   QUEUE TICKER — Live Served Count
-   ============================================================ */
-let totalServed = 23;
-setInterval(() => {
-    const el = document.getElementById('total-served');
-    if (el && Math.random() > 0.6) {
-        totalServed++;
-        el.textContent = totalServed;
-        el.style.color = '#00d4aa';
-        setTimeout(() => { el.style.color = ''; }, 500);
-    }
-}, 12000);
-
-/* ============================================================
-   SMOOTH SECTION TRANSITIONS
-   ============================================================ */
-const sections = document.querySelectorAll('section');
-const sectionObserver = new IntersectionObserver((entries) => {
+// ─── INTERSECTION OBSERVER (animate on scroll) ────────────────────
+function initObserver() {
+  const cards = document.querySelectorAll('.kpi-card, .glass-panel');
+  const obs = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            // Update active nav link
-            const id = entry.target.id;
-            document.querySelectorAll('.nav-links a').forEach(a => {
-                a.style.color = a.getAttribute('href') === `#${id}`
-                    ? '#00d4aa'
-                    : '';
-            });
-        }
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
     });
-}, { threshold: 0.3 });
+  }, { threshold: 0.1 });
 
-sections.forEach(s => sectionObserver.observe(s));
-
-/* ============================================================
-   HOLOGRAM INTERACTION
-   ============================================================ */
-const hologram = document.querySelector('.hologram-container');
-if (hologram) {
-    hologram.addEventListener('mousemove', (e) => {
-        const rect = hologram.getBoundingClientRect();
-        const x = ((e.clientX - rect.left) / rect.width - 0.5) * 20;
-        const y = ((e.clientY - rect.top) / rect.height - 0.5) * 20;
-        hologram.style.transform = `perspective(600px) rotateY(${x}deg) rotateX(${-y}deg)`;
-    });
-    hologram.addEventListener('mouseleave', () => {
-        hologram.style.transform = '';
-        hologram.style.transition = 'transform 0.5s ease';
-        setTimeout(() => { hologram.style.transition = ''; }, 500);
-    });
+  cards.forEach(card => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    obs.observe(card);
+  });
 }
 
-console.log(`
-╔══════════════════════════════════════╗
-║   QueueEase — Smart Queue Optimizer  ║
-║   Version 2.0 | ML-Powered Engine    ║
-║   © 2025 QueueEase Technologies      ║
-╚══════════════════════════════════════╝
-`);
+// ─── KPI CARD HOVER 3D TILT ───────────────────────────────────────
+function initCardTilt() {
+  document.querySelectorAll('.kpi-card').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      const rotX = ((y - cy) / cy) * -6;
+      const rotY = ((x - cx) / cx) * 6;
+      card.style.transform = `translateY(-6px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale(1.02)`;
+      card.style.transformStyle = 'preserve-3d';
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+    });
+  });
+}
+
+// ─── BOOT ─────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  updateDate();
+  initMiniBars();
+  initRevenueSparkline();
+  renderTable(INVENTORY);
+
+  // Init chart after a small delay to ensure canvas is ready
+  setTimeout(() => {
+    initChart();
+    updateChartColor(FORECAST_DATA[state.currentProduct].color);
+  }, 100);
+
+  // Animate KPI counters
+  setTimeout(() => {
+    animateCounter(document.getElementById('revenueCounter'), 32500, 1800);
+  }, 600);
+
+  // Animate demand bars
+  setTimeout(() => {
+    document.querySelectorAll('.demand-bar-fill').forEach(bar => {
+      const target = bar.style.width;
+      bar.style.width = '0%';
+      setTimeout(() => { bar.style.width = target; }, 100);
+    });
+  }, 400);
+
+  // Init scroll animations
+  setTimeout(initObserver, 200);
+
+  // Init 3D tilt
+  setTimeout(initCardTilt, 800);
+
+  // Keyboard shortcut: W for WhatsApp
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'w' && e.ctrlKey) {
+      e.preventDefault();
+      sendWhatsApp();
+    }
+  });
+});
