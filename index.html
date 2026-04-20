@@ -1,823 +1,521 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QueueEase — Smart Healthcare Queue Optimizer</title>
-    <meta name="description" content="QueueEase uses machine learning to optimize hospital queue flow in real-time — reducing wait times by up to 40% and transforming the patient experience.">
-    <meta property="og:title" content="QueueEase — Smart HealthCare Queue Optimizer">
-    <meta property="og:description" content="Wait Less, Heal Faster. ML-powered hospital queue management for the modern age.">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230d1f3c'/><text y='.9em' font-size='80' x='10'>🏥</text></svg>">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MSME Demand Forecaster — AI Dashboard</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
-    <!-- ===== NAVIGATION ===== -->
-    <nav class="navbar" id="navbar">
-        <div class="nav-container">
-            <div class="nav-logo">
-                <div class="logo-icon">
-                    <i class="fas fa-heartbeat"></i>
-                </div>
-                <span class="logo-text">Queue<span class="accent">Ease</span></span>
-            </div>
-            <ul class="nav-links">
-                <li><a href="#features">Features</a></li>
-                <li><a href="#tracker">Live Queue</a></li>
-                <li><a href="#how-it-works">How It Works</a></li>
-                <li><a href="#impact">Impact</a></li>
-                <li><a href="#predictive">AI Engine</a></li>
-            </ul>
-            <div class="nav-actions">
-                <a href="#" class="btn-ghost">Sign In</a>
-                <a href="#" class="btn-primary-nav">Get Started</a>
-            </div>
-            <button class="hamburger" id="hamburger">
-                <span></span><span></span><span></span>
-            </button>
+  <!-- ═══════════════════════════════════════════ AMBIENT BACKGROUND ═══════ -->
+  <div class="ambient-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="scanline"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ TOP NAV BAR ══════════════ -->
+  <header class="navbar" id="navbar">
+    <div class="navbar-left">
+      <div class="logo-mark">
+        <div class="logo-hex">
+          <i class="fas fa-brain"></i>
         </div>
+        <div class="logo-text">
+          <span class="logo-title">MSME</span>
+          <span class="logo-sub">Demand Forecaster</span>
+        </div>
+      </div>
+      <div class="nav-badge">
+        <span class="pulse-dot"></span>
+        AI Engine Active
+      </div>
+    </div>
+
+    <nav class="navbar-center">
+      <a href="#" class="nav-link active">Dashboard</a>
+      <a href="#" class="nav-link">Forecast</a>
+      <a href="#" class="nav-link">Inventory</a>
+      <a href="#" class="nav-link">Reports</a>
     </nav>
 
-    <!-- ===== HERO SECTION ===== -->
-    <section class="hero" id="hero">
-        <canvas id="hero-canvas"></canvas>
-        <div class="hero-particles" id="particles"></div>
-
-        <div class="hero-content">
-            <div class="hero-badge">
-                <span class="badge-dot"></span>
-                <span>Live Queue Intelligence • 2,400+ Hospitals</span>
-            </div>
-            <h1 class="hero-title">
-                ruko kaam ,<br>
-                <span class="gradient-text">jaldi ho thik</span>
-            </h1>
-            <p class="hero-subtitle">
-                QueueEase uses machine learning to optimize hospital queue flow in real-time — reducing wait times by up to <strong>40%</strong> and transforming the patient experience from arrival to treatment.
-            </p>
-            <div class="hero-actions">
-                <a href="#tracker" class="btn-primary">
-                    <i class="fas fa-ticket-alt"></i>
-                    Get Your Digital Token
-                </a>
-                <a href="#how-it-works" class="btn-secondary">
-                    <i class="fas fa-play-circle"></i>
-                    Watch Demo
-                </a>
-            </div>
-            <div class="hero-stats">
-                <div class="stat-item">
-                    <span class="stat-number" data-count="40">0</span><span class="stat-unit">%</span>
-                    <span class="stat-label">Reduced Wait Time</span>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat-item">
-                    <span class="stat-number" data-count="2400">0</span><span class="stat-unit">+</span>
-                    <span class="stat-label">Hospitals Onboarded</span>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat-item">
-                    <span class="stat-number" data-count="98">0</span><span class="stat-unit">%</span>
-                    <span class="stat-label">Patient Satisfaction</span>
-                </div>
-            </div>
+    <div class="navbar-right">
+      <div class="notif-btn">
+        <i class="fas fa-bell"></i>
+        <span class="notif-badge">3</span>
+      </div>
+      <div class="branch-dropdown" id="branchDropdown">
+        <button class="branch-btn" onclick="toggleDropdown()">
+          <i class="fas fa-store"></i>
+          <span class="branch-label">
+            <span class="branch-small">Select Branch</span>
+            <span class="branch-main">Main Street Store</span>
+          </span>
+          <i class="fas fa-chevron-down chevron-icon" id="chevronIcon"></i>
+        </button>
+        <div class="dropdown-menu" id="dropdownMenu">
+          <div class="dropdown-header">All Branches</div>
+          <div class="dropdown-item active" onclick="selectBranch('Main Street Store', this)">
+            <span class="branch-dot green"></span> Main Street Store <span class="tag">Primary</span>
+          </div>
+          <div class="dropdown-item" onclick="selectBranch('Koramangala Branch', this)">
+            <span class="branch-dot yellow"></span> Koramangala Branch
+          </div>
+          <div class="dropdown-item" onclick="selectBranch('Indiranagar Outlet', this)">
+            <span class="branch-dot blue"></span> Indiranagar Outlet
+          </div>
+          <div class="dropdown-item" onclick="selectBranch('Whitefield Hub', this)">
+            <span class="branch-dot purple"></span> Whitefield Hub
+          </div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-item view-all">
+            <i class="fas fa-plus-circle"></i> Add New Branch
+          </div>
         </div>
+      </div>
+      <div class="user-avatar">
+        <span>RS</span>
+      </div>
+    </div>
+  </header>
 
-        <!-- 3D Hologram Token -->
-        <div class="hero-visual">
-            <div class="hologram-container">
-                <div class="hologram-ring ring-1"></div>
-                <div class="hologram-ring ring-2"></div>
-                <div class="hologram-ring ring-3"></div>
-                <div class="hologram-core">
-                    <div class="medical-cross">
-                        <div class="cross-vertical"></div>
-                        <div class="cross-horizontal"></div>
-                        <div class="cross-glow"></div>
-                    </div>
-                    <div class="token-number">A47</div>
-                </div>
-                <div class="orbit-dot dot-1"></div>
-                <div class="orbit-dot dot-2"></div>
-                <div class="orbit-dot dot-3"></div>
-                <!-- Floating Cards -->
-                <div class="floating-card card-1">
-                    <i class="fas fa-clock"></i>
-                    <span>Est. Wait: <strong>8 min</strong></span>
-                </div>
-                <div class="floating-card card-2">
-                    <i class="fas fa-user-md"></i>
-                    <span>Dr. Chen <strong>Available</strong></span>
-                </div>
-                <div class="floating-card card-3">
-                    <i class="fas fa-bell"></i>
-                    <span>Your turn <strong>Next!</strong></span>
-                </div>
-            </div>
-        </div>
+  <!-- ═══════════════════════════════════════════ MAIN CONTENT ═════════════ -->
+  <main class="main-content">
 
-        <div class="scroll-indicator">
-            <div class="scroll-mouse">
-                <div class="scroll-wheel"></div>
-            </div>
-            <span>Scroll to explore</span>
+    <!-- GREETING BAR -->
+    <div class="greeting-bar">
+      <div class="greeting-left">
+        <h1 class="greeting-title">AI Forecast Dashboard <span class="greeting-wave">⚡</span></h1>
+        <p class="greeting-sub">Last model sync: <span class="highlight-text">Today, 09:42 AM</span> · Accuracy: <span class="highlight-green">94.7%</span></p>
+      </div>
+      <div class="greeting-right">
+        <div class="date-chip">
+          <i class="fas fa-calendar-alt"></i>
+          <span id="currentDate"></span>
         </div>
+        <div class="health-chip">
+          <i class="fas fa-circle-check"></i>
+          System Healthy
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ DRAG & DROP UPLOAD ZONE ═══════════════════════════════════ -->
+    <section class="upload-section" id="uploadSection">
+      <div class="upload-zone" id="uploadZone"
+           ondragover="handleDragOver(event)"
+           ondragleave="handleDragLeave(event)"
+           ondrop="handleDrop(event)">
+        <div class="upload-inner">
+          <div class="folder-3d" id="folderIcon">
+            <div class="folder-back"></div>
+            <div class="folder-tab"></div>
+            <div class="folder-front">
+              <i class="fas fa-chart-line folder-chart-icon"></i>
+            </div>
+            <div class="folder-glow"></div>
+          </div>
+          <div class="upload-text-group">
+            <h2 class="upload-title">Drop Daily Sales Excel / CSV Here</h2>
+            <p class="upload-sub">to Generate Forecast</p>
+            <div class="upload-formats">
+              <span class="fmt-chip"><i class="fas fa-file-excel"></i> .xlsx</span>
+              <span class="fmt-chip"><i class="fas fa-file-csv"></i> .csv</span>
+              <span class="fmt-chip"><i class="fas fa-table"></i> Google Sheets</span>
+            </div>
+          </div>
+          <div class="upload-actions">
+            <button class="upload-btn primary-btn" onclick="triggerFileUpload()">
+              <i class="fas fa-cloud-upload-alt"></i> Browse Files
+            </button>
+            <button class="upload-btn ghost-btn">
+              <i class="fas fa-link"></i> Connect Google Sheets
+            </button>
+          </div>
+          <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleFileSelect(event)" />
+        </div>
+        <!-- Upload progress overlay -->
+        <div class="upload-progress" id="uploadProgress">
+          <div class="progress-spinner"></div>
+          <p class="progress-text">Analyzing data &amp; generating AI forecast...</p>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="progressBarFill"></div>
+          </div>
+          <p class="progress-pct" id="progressPct">0%</p>
+        </div>
+      </div>
     </section>
 
-    <!-- ===== TRUSTED BY SECTION ===== -->
-    <section class="trust-section">
-        <div class="container">
-            <p class="trust-label">Trusted by leading healthcare systems</p>
-            <div class="trust-logos">
-                <div class="trust-logo">Apollo Hospitals</div>
-                <div class="trust-logo">Fortis Healthcare</div>
-                <div class="trust-logo">AIIMS Network</div>
-                <div class="trust-logo">Max HealthCare</div>
-                <div class="trust-logo">Columbia Asia</div>
-                <div class="trust-logo">Narayana Health</div>
-            </div>
+    <!-- ═══════ KPI METRIC CARDS ══════════════════════════════════════════ -->
+    <section class="kpi-section">
+
+      <!-- Card 1: RED CRITICAL ALERT -->
+      <article class="kpi-card card-critical" id="card-critical">
+        <div class="card-alert-ribbon">
+          <i class="fas fa-exclamation-triangle"></i> CRITICAL ALERT
         </div>
+        <div class="card-inner">
+          <div class="card-header-row">
+            <div class="card-icon-wrap red-icon">
+              <i class="fas fa-watch"></i>
+            </div>
+            <div class="card-status-badge critical-badge">
+              <span class="pulse-ring"></span>
+              Stockout Risk
+            </div>
+          </div>
+          <h3 class="card-product">Smartwatches</h3>
+          <p class="card-alert-text">Stockout in <span class="countdown">3 Days!</span></p>
+          <div class="card-metrics">
+            <div class="metric-block">
+              <span class="metric-label">Current Stock</span>
+              <span class="metric-value red-val">20 <small>units</small></span>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-block">
+              <span class="metric-label">Predicted Demand</span>
+              <span class="metric-value white-val">85 <small>units</small></span>
+            </div>
+          </div>
+          <div class="demand-bar-wrap">
+            <div class="demand-label-row">
+              <span>Stock Coverage</span>
+              <span class="demand-pct red-val">23.5%</span>
+            </div>
+            <div class="demand-bar-track">
+              <div class="demand-bar-fill critical-fill" style="width:23.5%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer-action">
+          <button class="whatsapp-card-btn" onclick="sendWhatsApp()">
+            <i class="fab fa-whatsapp"></i> Send Purchase Alert via WhatsApp
+          </button>
+        </div>
+        <!-- Red lightning effect -->
+        <div class="red-lightning"></div>
+        <div class="card-glow-overlay red-glow-overlay"></div>
+      </article>
+
+      <!-- Card 2: YELLOW WARNING -->
+      <article class="kpi-card card-warning" id="card-warning">
+        <div class="card-inner">
+          <div class="card-header-row">
+            <div class="card-icon-wrap yellow-icon">
+              <i class="fas fa-battery-three-quarters"></i>
+            </div>
+            <div class="card-status-badge warning-badge">
+              <i class="fas fa-clock"></i> Reorder Soon
+            </div>
+          </div>
+          <h3 class="card-product">Power Banks</h3>
+          <p class="card-alert-text warning-text">Reorder <span class="countdown yellow-cnt">Next Week</span></p>
+          <div class="card-metrics">
+            <div class="metric-block">
+              <span class="metric-label">Current Stock</span>
+              <span class="metric-value yellow-val">145 <small>units</small></span>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-block">
+              <span class="metric-label">Predicted Demand</span>
+              <span class="metric-value white-val">200 <small>units</small></span>
+            </div>
+          </div>
+          <div class="demand-bar-wrap">
+            <div class="demand-label-row">
+              <span>Stock Coverage</span>
+              <span class="demand-pct yellow-val">72.5%</span>
+            </div>
+            <div class="demand-bar-track">
+              <div class="demand-bar-fill warning-fill" style="width:72.5%"></div>
+            </div>
+          </div>
+          <div class="mini-forecast">
+            <div class="mini-forecast-label">7-Day Velocity</div>
+            <div class="mini-bars" id="miniBarsPB"></div>
+          </div>
+        </div>
+        <div class="card-glow-overlay yellow-glow-overlay"></div>
+      </article>
+
+      <!-- Card 3: REVENUE AT RISK -->
+      <article class="kpi-card card-revenue" id="card-revenue">
+        <div class="card-inner">
+          <div class="card-header-row">
+            <div class="card-icon-wrap purple-icon">
+              <i class="fas fa-indian-rupee-sign"></i>
+            </div>
+            <div class="card-status-badge revenue-badge">
+              <i class="fas fa-arrow-trend-down"></i> Revenue Risk
+            </div>
+          </div>
+          <h3 class="card-product">Money Lost Calculator</h3>
+          <p class="revenue-main">Potential Revenue at Risk</p>
+          <div class="revenue-amount">
+            <span class="rupee-sym">₹</span>
+            <span class="revenue-figure" id="revenueCounter">32,500</span>
+          </div>
+          <div class="revenue-trend">
+            <div class="trend-item">
+              <i class="fas fa-arrow-down red-arrow"></i>
+              <span>Stockout losses this week</span>
+              <strong class="red-val">₹18,200</strong>
+            </div>
+            <div class="trend-item">
+              <i class="fas fa-arrow-down red-arrow"></i>
+              <span>Missed upsell opportunities</span>
+              <strong class="red-val">₹14,300</strong>
+            </div>
+          </div>
+          <div class="revenue-sparkline" id="revenueSparkline"></div>
+          <div class="revenue-cta">
+            <i class="fas fa-lightbulb"></i>
+            <span>Fix Smartwatches reorder to recover <strong>₹18,200</strong></span>
+          </div>
+        </div>
+        <div class="card-glow-overlay purple-glow-overlay"></div>
+      </article>
+
     </section>
 
-    <!-- ===== REAL-TIME TRACKER ===== -->
-    <section class="tracker-section" id="tracker">
-        <div class="container">
-            <div class="section-header reveal">
-                <span class="section-tag">Live Dashboard</span>
-                <h2 class="section-title">Real-Time Queue <span class="gradient-text">Intelligence</span></h2>
-                <p class="section-subtitle">Watch the queue update live. Every token, every doctor, every second — perfectly synchronized.</p>
+    <!-- ═══════ MAIN CHART + TOGGLES ════════════════════════════════════════ -->
+    <section class="chart-section">
+      <div class="chart-panel glass-panel">
+        <div class="chart-panel-header">
+          <div class="chart-title-group">
+            <h2 class="chart-title">AI Sales Forecast — Next 30 Days</h2>
+            <p class="chart-sub">Powered by LSTM Neural Network · R² Score: <span class="highlight-green">0.943</span></p>
+          </div>
+          <div class="chart-controls">
+            <div class="timeframe-tabs">
+              <button class="tf-tab active" onclick="setTimeframe('7d', this)">7D</button>
+              <button class="tf-tab" onclick="setTimeframe('30d', this)">30D</button>
+              <button class="tf-tab" onclick="setTimeframe('90d', this)">90D</button>
             </div>
-
-            <div class="tracker-wrapper reveal">
-                <!-- Dashboard Header -->
-                <div class="dashboard-header">
-                    <div class="dash-title">
-                        <div class="live-indicator">
-                            <span class="live-pulse"></span>
-                            <span>LIVE</span>
-                        </div>
-                        <h3>OPD Queue — General Medicine</h3>
-                    </div>
-                    <div class="dash-controls">
-                        <button class="dash-btn active" onclick="switchDept('general')">General</button>
-                        <button class="dash-btn" onclick="switchDept('cardio')">Cardiology</button>
-                        <button class="dash-btn" onclick="switchDept('ortho')">Orthopedics</button>
-                    </div>
-                    <div class="dash-meta">
-                        <span><i class="fas fa-calendar-day"></i> Today, <span id="current-date"></span></span>
-                        <span><i class="fas fa-clock"></i> <span id="current-time"></span></span>
-                    </div>
-                </div>
-
-                <!-- Now Serving -->
-                <div class="now-serving-banner">
-                    <div class="ns-label">NOW SERVING</div>
-                    <div class="ns-token" id="now-serving-token">A44</div>
-                    <div class="ns-info">
-                        <span id="now-serving-name">Mr. Rajesh K.</span>
-                        <span>Room 3 — Dr. Priya Sharma</span>
-                    </div>
-                    <div class="ns-timer">
-                        <i class="fas fa-hourglass-half"></i>
-                        <span id="serving-timer">04:32</span>
-                    </div>
-                </div>
-
-                <!-- Queue Grid -->
-                <div class="queue-grid" id="queue-grid">
-                    <!-- Populated by JS -->
-                </div>
-
-                <!-- Queue Stats Bar -->
-                <div class="queue-stats-bar">
-                    <div class="qs-item">
-                        <i class="fas fa-users"></i>
-                        <span><strong id="total-waiting">8</strong> Waiting</span>
-                    </div>
-                    <div class="qs-item">
-                        <i class="fas fa-check-circle"></i>
-                        <span><strong id="total-served">23</strong> Served Today</span>
-                    </div>
-                    <div class="qs-item">
-                        <i class="fas fa-clock"></i>
-                        <span>Avg: <strong>11 min</strong></span>
-                    </div>
-                    <div class="qs-item emergency">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span><strong>0</strong> Emergencies</span>
-                    </div>
-                </div>
+            <div class="product-filter">
+              <select class="product-select" onchange="switchProduct(this.value)">
+                <option value="smartwatch">Smartwatches</option>
+                <option value="powerbank">Power Banks</option>
+                <option value="earbuds">Earbuds</option>
+                <option value="cables">Cables</option>
+              </select>
             </div>
-
-            <!-- Doctor Availability Panel -->
-            <div class="doctors-panel reveal">
-                <h3 class="panel-title"><i class="fas fa-user-md"></i> Doctor Availability — Live Toggles</h3>
-                <div class="doctors-grid" id="doctors-grid">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
+          </div>
         </div>
+
+        <!-- Toggle Switches -->
+        <div class="chart-toggles-row">
+          <div class="toggle-card">
+            <div class="toggle-info">
+              <div class="toggle-icon-wrap ci-icon">
+                <i class="fas fa-chart-area"></i>
+              </div>
+              <div class="toggle-text">
+                <span class="toggle-title">Enable 95% Confidence Interval</span>
+                <span class="toggle-desc">Show Risk Margin Band on Forecast</span>
+              </div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="ciToggle" onchange="toggleConfidenceInterval(this.checked)" />
+              <span class="toggle-track">
+                <span class="toggle-thumb"></span>
+              </span>
+            </label>
+          </div>
+
+          <div class="toggle-card">
+            <div class="toggle-info">
+              <div class="toggle-icon-wrap festival-icon">
+                <i class="fas fa-star-and-crescent"></i>
+              </div>
+              <div class="toggle-text">
+                <span class="toggle-title">Apply Festival / Weather Impact</span>
+                <span class="toggle-desc">Upcoming Events: Diwali +34% · Monsoon -8%</span>
+              </div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="festivalToggle" onchange="toggleFestivalImpact(this.checked)" />
+              <span class="toggle-track">
+                <span class="toggle-thumb"></span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <!-- CHART CANVAS -->
+        <div class="chart-canvas-wrap" style="height: 380px; position:relative;">
+          <canvas id="forecastChart"></canvas>
+          <!-- Chart legend -->
+          <div class="chart-legend-custom">
+            <div class="legend-item">
+              <span class="legend-dot cyan-dot"></span> AI Forecast
+            </div>
+            <div class="legend-item" id="legendActual">
+              <span class="legend-dot white-dot"></span> Actual Sales
+            </div>
+            <div class="legend-item" id="legendCI" style="display:none">
+              <span class="legend-dot teal-dot"></span> 95% CI Band
+            </div>
+            <div class="legend-item" id="legendFestival" style="display:none">
+              <span class="legend-dot orange-dot"></span> Festival Adjusted
+            </div>
+          </div>
+          <!-- Stockout marker -->
+          <div class="stockout-marker" id="stockoutMarker">
+            <i class="fas fa-exclamation-triangle"></i> Stockout Risk Zone
+          </div>
+        </div>
+
+        <!-- Chart stats row -->
+        <div class="chart-stats-row">
+          <div class="chart-stat">
+            <span class="cs-label">Forecast Accuracy</span>
+            <span class="cs-value cyan-val">94.7%</span>
+          </div>
+          <div class="chart-stat">
+            <span class="cs-label">Peak Demand Day</span>
+            <span class="cs-value white-val">Day 12</span>
+          </div>
+          <div class="chart-stat">
+            <span class="cs-label">Suggested Reorder</span>
+            <span class="cs-value green-val">Today</span>
+          </div>
+          <div class="chart-stat">
+            <span class="cs-label">Reorder Quantity</span>
+            <span class="cs-value yellow-val">150 units</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIDE PANEL: Quick Actions & Insights -->
+      <aside class="side-panel">
+        <div class="insight-panel glass-panel">
+          <h3 class="side-title"><i class="fas fa-robot"></i> AI Insights</h3>
+          <div class="insight-list">
+            <div class="insight-item critical-insight">
+              <div class="insight-icon"><i class="fas fa-fire"></i></div>
+              <div class="insight-body">
+                <strong>Urgent:</strong> Smartwatches will stock out in <span class="red-val">3 days</span> based on current velocity.
+              </div>
+            </div>
+            <div class="insight-item warning-insight">
+              <div class="insight-icon"><i class="fas fa-calendar"></i></div>
+              <div class="insight-body">
+                <strong>Diwali:</strong> Expect <span class="yellow-val">+34%</span> demand surge in 18 days. Pre-stock recommended.
+              </div>
+            </div>
+            <div class="insight-item info-insight">
+              <div class="insight-icon"><i class="fas fa-cloud-rain"></i></div>
+              <div class="insight-body">
+                <strong>Weather:</strong> Monsoon may reduce footfall by <span class="blue-val">8%</span> next week.
+              </div>
+            </div>
+            <div class="insight-item success-insight">
+              <div class="insight-icon"><i class="fas fa-trophy"></i></div>
+              <div class="insight-body">
+                Earbuds trending <span class="green-val">↑ 22%</span> — Consider increasing inventory.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="quick-actions glass-panel">
+          <h3 class="side-title"><i class="fas fa-bolt"></i> Quick Actions</h3>
+          <button class="qa-btn qa-primary" onclick="sendWhatsApp()">
+            <i class="fab fa-whatsapp"></i> WhatsApp Supplier
+          </button>
+          <button class="qa-btn qa-secondary">
+            <i class="fas fa-file-pdf"></i> Export PDF Report
+          </button>
+          <button class="qa-btn qa-tertiary">
+            <i class="fas fa-envelope"></i> Email Team Summary
+          </button>
+        </div>
+      </aside>
     </section>
 
-    <!-- ===== FEATURES SECTION ===== -->
-    <section class="features-section" id="features">
-        <div class="container">
-            <div class="section-header reveal">
-                <span class="section-tag">Platform Features</span>
-                <h2 class="section-title">Everything You Need to <span class="gradient-text">Run Smarter</span></h2>
-                <p class="section-subtitle">Built for hospitals, designed for patients. QueueEase brings cutting-edge tech to every touchpoint of the healthcare journey.</p>
+    <!-- ═══════ BOTTOM TABLE: Inventory Status ═══════════════════════════ -->
+    <section class="table-section">
+      <div class="table-panel glass-panel">
+        <div class="table-header">
+          <h2 class="table-title"><i class="fas fa-list-check"></i> Full Inventory Forecast Status</h2>
+          <div class="table-actions">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" placeholder="Search product..." id="tableSearch" oninput="filterTable(this.value)" />
             </div>
-
-            <div class="features-grid">
-                <div class="feature-card feature-large reveal">
-                    <div class="feature-icon-wrap">
-                        <div class="feature-icon">
-                            <i class="fas fa-sync-alt"></i>
-                        </div>
-                    </div>
-                    <h3>Live Queue Sync</h3>
-                    <p>Real-time queue updates powered by distributed algorithms. Every patient, every doctor, every room — synchronized within milliseconds. No more outdated numbers on a lobby board.</p>
-                    <div class="feature-visual">
-                        <div class="sync-animation">
-                            <div class="sync-node node-a">Patient</div>
-                            <div class="sync-line"></div>
-                            <div class="sync-node node-b">Queue Engine</div>
-                            <div class="sync-line"></div>
-                            <div class="sync-node node-c">Doctor</div>
-                        </div>
-                    </div>
-                    <a href="#" class="feature-link">Learn more <i class="fas fa-arrow-right"></i></a>
-                </div>
-
-                <div class="feature-card reveal" style="--delay: 0.1s">
-                    <div class="feature-icon-wrap">
-                        <div class="feature-icon">
-                            <i class="fas fa-bell"></i>
-                        </div>
-                    </div>
-                    <h3>Smart Notifications</h3>
-                    <p>Automated SMS and push alerts notify patients exactly when to head to the clinic — 10 minutes before their turn. No waiting room, no anxiety.</p>
-                    <div class="notification-demo">
-                        <div class="notif-bubble">
-                            <i class="fas fa-sms"></i>
-                            <span>Your token A47 is next. Please arrive at Room 3 in <strong>8 minutes</strong>.</span>
-                        </div>
-                    </div>
-                    <a href="#" class="feature-link">Learn more <i class="fas fa-arrow-right"></i></a>
-                </div>
-
-                <div class="feature-card reveal" style="--delay: 0.2s">
-                    <div class="feature-icon-wrap">
-                        <div class="feature-icon">
-                            <i class="fas fa-stethoscope"></i>
-                        </div>
-                    </div>
-                    <h3>Doctor's Portal</h3>
-                    <p>Physicians control their queue with a single tap. Toggle availability, extend consultation time, or hand off to a colleague — all in real time.</p>
-                    <div class="toggle-demo">
-                        <div class="toggle-item">
-                            <span>Dr. Priya Sharma</span>
-                            <div class="toggle-switch active" onclick="this.classList.toggle('active')">
-                                <div class="toggle-thumb"></div>
-                            </div>
-                            <span class="toggle-status">Available</span>
-                        </div>
-                        <div class="toggle-item">
-                            <span>Dr. Arjun Mehta</span>
-                            <div class="toggle-switch" onclick="this.classList.toggle('active')">
-                                <div class="toggle-thumb"></div>
-                            </div>
-                            <span class="toggle-status">In Consultation</span>
-                        </div>
-                    </div>
-                    <a href="#" class="feature-link">Learn more <i class="fas fa-arrow-right"></i></a>
-                </div>
-
-                <div class="feature-card reveal" style="--delay: 0.3s">
-                    <div class="feature-icon-wrap">
-                        <div class="feature-icon">
-                            <i class="fas fa-mobile-alt"></i>
-                        </div>
-                    </div>
-                    <h3>Book Anywhere</h3>
-                    <p>Patients book tokens from their phone, web browser, or hospital kiosk. Pre-registration eliminates paperwork at the front desk.</p>
-                    <a href="#" class="feature-link">Learn more <i class="fas fa-arrow-right"></i></a>
-                </div>
-
-                <div class="feature-card reveal" style="--delay: 0.4s">
-                    <div class="feature-icon-wrap">
-                        <div class="feature-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                    </div>
-                    <h3>Analytics Dashboard</h3>
-                    <p>Hospital administrators get granular insights — peak hours, bottleneck detection, doctor efficiency scores, and predictive staffing recommendations.</p>
-                    <a href="#" class="feature-link">Learn more <i class="fas fa-arrow-right"></i></a>
-                </div>
-
-                <div class="feature-card reveal" style="--delay: 0.5s">
-                    <div class="feature-icon-wrap">
-                        <div class="feature-icon">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                    </div>
-                    <h3>HIPAA Compliant</h3>
-                    <p>All patient data encrypted end-to-end. Zero PII stored on third-party servers. Fully compliant with HIPAA, GDPR, and local healthcare data regulations.</p>
-                    <a href="#" class="feature-link">Learn more <i class="fas fa-arrow-right"></i></a>
-                </div>
-            </div>
+            <button class="table-btn"><i class="fas fa-filter"></i> Filter</button>
+            <button class="table-btn primary-table-btn"><i class="fas fa-download"></i> Export</button>
+          </div>
         </div>
+        <div class="table-wrap">
+          <table class="data-table" id="inventoryTable">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Stock</th>
+                <th>7-Day Demand</th>
+                <th>30-Day Forecast</th>
+                <th>Days Left</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
-    <!-- ===== HOW IT WORKS ===== -->
-    <section class="how-section" id="how-it-works">
-        <div class="container">
-            <div class="section-header reveal">
-                <span class="section-tag">Process Flow</span>
-                <h2 class="section-title">Three Steps to a <span class="gradient-text">Better Visit</span></h2>
-                <p class="section-subtitle">From booking to consultation — QueueEase makes every step transparent, predictable, and stress-free.</p>
-            </div>
+  </main>
 
-            <div class="steps-container">
-                <div class="step-card reveal">
-                    <div class="step-number">01</div>
-                    <div class="step-icon-wrap">
-                        <div class="step-icon">
-                            <i class="fas fa-laptop-medical"></i>
-                        </div>
-                    </div>
-                    <h3>Book Online</h3>
-                    <p>Register from your phone or web browser. Choose your department, preferred doctor, and timeslot. Receive a digital token instantly — no forms, no queues at the counter.</p>
-                    <ul class="step-features">
-                        <li><i class="fas fa-check"></i> Online & kiosk booking</li>
-                        <li><i class="fas fa-check"></i> Instant token generation</li>
-                        <li><i class="fas fa-check"></i> Appointment confirmation SMS</li>
-                    </ul>
-                </div>
+  <!-- ═══════ FLOATING WhatsApp BUTTON ════════════════════════════════════ -->
+  <button class="fab-whatsapp" id="fabWhatsApp" onclick="sendWhatsApp()" title="Send Purchase Alert via WhatsApp">
+    <div class="fab-inner">
+      <i class="fab fa-whatsapp fab-icon"></i>
+      <div class="fab-text-group">
+        <span class="fab-label">Send Purchase Alert</span>
+        <span class="fab-sub">via WhatsApp</span>
+      </div>
+    </div>
+    <div class="fab-pulse"></div>
+    <div class="fab-pulse fab-pulse-2"></div>
+  </button>
 
-                <div class="step-connector reveal">
-                    <div class="connector-line"></div>
-                    <div class="connector-arrow"><i class="fas fa-chevron-right"></i></div>
-                </div>
+  <!-- ═══════ TOAST NOTIFICATION ════════════════════════════════════════= -->
+  <div class="toast" id="toast">
+    <i class="fab fa-whatsapp toast-icon"></i>
+    <span id="toastMsg">Alert sent to supplier!</span>
+  </div>
 
-                <div class="step-card reveal" style="--delay: 0.15s">
-                    <div class="step-number">02</div>
-                    <div class="step-icon-wrap">
-                        <div class="step-icon">
-                            <i class="fas fa-satellite-dish"></i>
-                        </div>
-                    </div>
-                    <h3>Track Live</h3>
-                    <p>Watch your position in queue update in real-time on any device. Our ML engine calculates dynamic ETAs, accounting for emergency cases and consultation overruns.</p>
-                    <ul class="step-features">
-                        <li><i class="fas fa-check"></i> Live queue position tracking</li>
-                        <li><i class="fas fa-check"></i> ML-powered ETA prediction</li>
-                        <li><i class="fas fa-check"></i> 10-min advance notification</li>
-                    </ul>
-                </div>
+  <!-- ═══════ UPLOAD SUCCESS MODAL ════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-icon-wrap">
+        <i class="fas fa-circle-check modal-check"></i>
+      </div>
+      <h2 class="modal-title">Forecast Generated!</h2>
+      <p class="modal-sub">Your sales data has been processed by the AI engine.</p>
+      <div class="modal-stats">
+        <div class="ms-item"><span class="ms-label">Records Processed</span><span class="ms-val">2,847</span></div>
+        <div class="ms-item"><span class="ms-label">Products Detected</span><span class="ms-val">24</span></div>
+        <div class="ms-item"><span class="ms-label">Accuracy</span><span class="ms-val green-val">94.7%</span></div>
+      </div>
+      <button class="modal-close-btn" onclick="closeModal()">View Dashboard</button>
+    </div>
+  </div>
 
-                <div class="step-connector reveal">
-                    <div class="connector-line"></div>
-                    <div class="connector-arrow"><i class="fas fa-chevron-right"></i></div>
-                </div>
-
-                <div class="step-card reveal" style="--delay: 0.3s">
-                    <div class="step-number">03</div>
-                    <div class="step-icon-wrap">
-                        <div class="step-icon">
-                            <i class="fas fa-user-md"></i>
-                        </div>
-                    </div>
-                    <h3>Visit Doctor</h3>
-                    <p>Arrive exactly when called. No crowded waiting rooms. Your medical history pre-loaded on the doctor's screen. Walk in, get treated, walk out — faster than ever.</p>
-                    <ul class="step-features">
-                        <li><i class="fas fa-check"></i> Zero wait on arrival</li>
-                        <li><i class="fas fa-check"></i> Pre-loaded patient profile</li>
-                        <li><i class="fas fa-check"></i> Digital prescription generated</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ===== IMPACT METRICS ===== -->
-    <section class="impact-section" id="impact">
-        <div class="container">
-            <div class="section-header reveal">
-                <span class="section-tag">Proven Results</span>
-                <h2 class="section-title">Data-Driven <span class="gradient-text">Healthcare Impact</span></h2>
-                <p class="section-subtitle">Our results speak louder than promises. Measured across 2,400+ hospital deployments over 3 years.</p>
-            </div>
-
-            <div class="impact-grid">
-                <div class="impact-card big reveal">
-                    <div class="impact-number">
-                        <span class="count-up" data-target="40">0</span><span>%</span>
-                    </div>
-                    <div class="impact-label">Reduction in Waiting Room Crowding</div>
-                    <div class="impact-bar">
-                        <div class="impact-bar-fill" data-width="40"></div>
-                    </div>
-                    <p class="impact-desc">Physical waiting room occupancy dropped by 40% in hospitals using QueueEase, reducing infection risk and improving patient comfort.</p>
-                </div>
-
-                <div class="impact-card reveal" style="--delay: 0.1s">
-                    <div class="impact-number">
-                        <span class="count-up" data-target="63">0</span><span>%</span>
-                    </div>
-                    <div class="impact-label">Faster Average Consultation Turnaround</div>
-                    <div class="impact-bar">
-                        <div class="impact-bar-fill" data-width="63"></div>
-                    </div>
-                </div>
-
-                <div class="impact-card reveal" style="--delay: 0.2s">
-                    <div class="impact-number">
-                        <span class="count-up" data-target="98">0</span><span>%</span>
-                    </div>
-                    <div class="impact-label">Patient Satisfaction Score</div>
-                    <div class="impact-bar">
-                        <div class="impact-bar-fill" data-width="98"></div>
-                    </div>
-                </div>
-
-                <div class="impact-card reveal" style="--delay: 0.3s">
-                    <div class="impact-number">
-                        <span class="count-up" data-target="27">0</span><span>%</span>
-                    </div>
-                    <div class="impact-label">Reduction in No-Show Appointments</div>
-                    <div class="impact-bar">
-                        <div class="impact-bar-fill" data-width="27"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Chart Section -->
-            <div class="chart-section reveal">
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Weekly Queue Volume & Wait Time Analysis</h3>
-                        <div class="chart-legend">
-                            <span class="legend-dot" style="background: #00d4aa"></span>Average Wait (min)
-                            <span class="legend-dot" style="background: #667eea; margin-left: 1rem"></span>Queue Volume
-                        </div>
-                    </div>
-                    <div style="height: 300px; position: relative;">
-                        <canvas id="weeklyChart"></canvas>
-                    </div>
-                    <p class="chart-insight"><i class="fas fa-brain"></i> <strong>ML Insight:</strong> Mondays experience 34% longer queues than Thursdays. QueueEase auto-scales staffing recommendations for peak days.</p>
-                </div>
-
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3>Department-wise Queue Efficiency</h3>
-                    </div>
-                    <div style="height: 300px; position: relative;">
-                        <canvas id="deptChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ===== PREDICTIVE AI SECTION ===== -->
-    <section class="predictive-section" id="predictive">
-        <div class="container">
-            <div class="predictive-grid">
-                <div class="predictive-content reveal">
-                    <span class="section-tag">ML-Powered Engine</span>
-                    <h2 class="section-title">Predictive Wait Times <span class="gradient-text">Before You Arrive</span></h2>
-                    <p>QueueEase's proprietary ML model analyzes 18+ months of historical queue data to predict wait times before a single patient walks in — adjusting dynamically as the day unfolds.</p>
-
-                    <div class="ml-features">
-                        <div class="ml-feature">
-                            <div class="ml-icon"><i class="fas fa-calendar-week"></i></div>
-                            <div>
-                                <h4>Day-of-Week Patterns</h4>
-                                <p>Mondays take 34% longer than Thursdays on average. The model pre-allocates resources accordingly.</p>
-                            </div>
-                        </div>
-                        <div class="ml-feature">
-                            <div class="ml-icon"><i class="fas fa-sun"></i></div>
-                            <div>
-                                <h4>Time-of-Day Optimization</h4>
-                                <p>Morning slots (9–11 AM) are 2x busier. Dynamic token distribution balances load throughout the day.</p>
-                            </div>
-                        </div>
-                        <div class="ml-feature">
-                            <div class="ml-icon"><i class="fas fa-cloud-rain"></i></div>
-                            <div>
-                                <h4>Seasonal & Weather Factors</h4>
-                                <p>Flu season and weather patterns influence visit spikes. The model adapts weeks in advance.</p>
-                            </div>
-                        </div>
-                        <div class="ml-feature">
-                            <div class="ml-icon"><i class="fas fa-robot"></i></div>
-                            <div>
-                                <h4>Continuous Learning</h4>
-                                <p>Every completed visit refines the model. Accuracy improves week over week, hospital over hospital.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="predictive-visual reveal">
-                    <div class="prediction-card glass-card">
-                        <div class="pred-header">
-                            <i class="fas fa-brain"></i>
-                            <span>AI Prediction Engine</span>
-                            <div class="pred-status">Active</div>
-                        </div>
-                        <div class="pred-chart-wrap">
-                            <canvas id="predictionChart" height="200"></canvas>
-                        </div>
-                        <div class="pred-insights">
-                            <div class="pred-insight">
-                                <span class="pi-label">Today's Forecast</span>
-                                <span class="pi-value high">High Traffic</span>
-                            </div>
-                            <div class="pred-insight">
-                                <span class="pi-label">Peak Window</span>
-                                <span class="pi-value">10:00–11:30 AM</span>
-                            </div>
-                            <div class="pred-insight">
-                                <span class="pi-label">Recommended Doctors</span>
-                                <span class="pi-value">+2 from backup pool</span>
-                            </div>
-                            <div class="pred-insight">
-                                <span class="pi-label">Model Confidence</span>
-                                <span class="pi-value accent">94.7%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ===== EMERGENCY OVERRIDE SECTION ===== -->
-    <section class="emergency-section" id="emergency">
-        <div class="container">
-            <div class="section-header reveal">
-                <span class="section-tag emergency-tag"><i class="fas fa-ambulance"></i> Critical Care Protocol</span>
-                <h2 class="section-title">Emergency Triage <span class="gradient-text emergency-gradient">Override</span></h2>
-                <p class="section-subtitle">When seconds matter, QueueEase automatically reprioritizes the entire queue — notifying every patient in real time.</p>
-            </div>
-
-            <div class="emergency-demo reveal">
-                <div class="emergency-timeline">
-                    <div class="et-step">
-                        <div class="et-icon critical">
-                            <i class="fas fa-ambulance"></i>
-                        </div>
-                        <div class="et-content">
-                            <h4>Critical Patient Arrives</h4>
-                            <p>Emergency flag raised at 10:47 AM. System detects critical triage level via check-in kiosk.</p>
-                            <div class="et-badge critical">CRITICAL</div>
-                        </div>
-                    </div>
-                    <div class="et-connector"></div>
-                    <div class="et-step">
-                        <div class="et-icon algorithm">
-                            <i class="fas fa-cogs"></i>
-                        </div>
-                        <div class="et-content">
-                            <h4>Algorithm Recalculates</h4>
-                            <p>Queue Engine inserts emergency patient at position #1. All subsequent tokens shift by one. Revised ETAs computed in 120ms.</p>
-                            <div class="et-badge algorithm">AUTO-REORDERED</div>
-                        </div>
-                    </div>
-                    <div class="et-connector"></div>
-                    <div class="et-step">
-                        <div class="et-icon notify">
-                            <i class="fas fa-broadcast-tower"></i>
-                        </div>
-                        <div class="et-content">
-                            <h4>Instant Patient Notification</h4>
-                            <p>All waiting patients receive SMS/push: "Due to an emergency case, your estimated wait has increased by ~12 minutes. We apologize for the delay."</p>
-                            <div class="et-badge notify">NOTIFIED</div>
-                        </div>
-                    </div>
-                    <div class="et-connector"></div>
-                    <div class="et-step">
-                        <div class="et-icon resolved">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="et-content">
-                            <h4>Queue Normalizes</h4>
-                            <p>Emergency handled. Queue resumes normal flow. Adjusted tokens auto-confirmed. Staff alerted to resume schedule.</p>
-                            <div class="et-badge resolved">RESOLVED</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Emergency Demo Button -->
-                <div class="emergency-trigger">
-                    <button class="emergency-btn" id="emergency-btn" onclick="triggerEmergency()">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        Simulate Emergency Override
-                    </button>
-                    <p>Click to see real-time queue reordering in action</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ===== HARDWARE INTEGRATION ===== -->
-    <section class="hardware-section" id="hardware">
-        <div class="container">
-            <div class="hardware-grid">
-                <div class="hardware-content reveal">
-                    <span class="section-tag future-tag"><i class="fas fa-rocket"></i> Coming in v2.0</span>
-                    <h2 class="section-title">QR Kiosk <span class="gradient-text">Hardware Integration</span></h2>
-                    <p>For patients who don't book online — our next-generation QR code kiosks placed at hospital entrances bring the QueueEase experience to everyone, regardless of digital access.</p>
-
-                    <div class="hardware-features">
-                        <div class="hw-feature">
-                            <i class="fas fa-qrcode"></i>
-                            <div>
-                                <h4>Scan & Enqueue</h4>
-                                <p>Patients scan their Aadhaar or health ID QR code. System auto-assigns token and department.</p>
-                            </div>
-                        </div>
-                        <div class="hw-feature">
-                            <i class="fas fa-print"></i>
-                            <div>
-                                <h4>Instant Token Print</h4>
-                                <p>Physical token printed with QR code for real-time status tracking on any device.</p>
-                            </div>
-                        </div>
-                        <div class="hw-feature">
-                            <i class="fas fa-language"></i>
-                            <div>
-                                <h4>Multi-Language Support</h4>
-                                <p>Kiosks operate in 14 regional languages. Voice-guided interface for visually impaired patients.</p>
-                            </div>
-                        </div>
-                        <div class="hw-feature">
-                            <i class="fas fa-wifi"></i>
-                            <div>
-                                <h4>Offline-First Design</h4>
-                                <p>Kiosks function on local network with periodic cloud sync. No internet? No problem.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="hardware-visual reveal">
-                    <div class="kiosk-mockup">
-                        <div class="kiosk-screen">
-                            <div class="kiosk-header">
-                                <div class="logo-icon small"><i class="fas fa-heartbeat"></i></div>
-                                <span>QueueEase Kiosk</span>
-                            </div>
-                            <div class="kiosk-body">
-                                <div class="kiosk-qr">
-                                    <div class="qr-grid">
-                                        <div class="qr-pattern"></div>
-                                    </div>
-                                    <span>Scan Your Health ID</span>
-                                </div>
-                                <div class="kiosk-or">— OR —</div>
-                                <div class="kiosk-manual">
-                                    <button class="kiosk-btn">Enter Mobile Number</button>
-                                    <button class="kiosk-btn">Walk-in Patient</button>
-                                </div>
-                            </div>
-                            <div class="kiosk-footer">
-                                <span>🌐 EN</span>
-                                <span>♿ Accessibility</span>
-                                <span>🆘 Help</span>
-                            </div>
-                        </div>
-                        <div class="kiosk-stand"></div>
-                        <div class="kiosk-base"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ===== TESTIMONIALS ===== -->
-    <section class="testimonials-section">
-        <div class="container">
-            <div class="section-header reveal">
-                <span class="section-tag">Patient Stories</span>
-                <h2 class="section-title">Voices from the <span class="gradient-text">Healthcare Community</span></h2>
-            </div>
-            <div class="testimonials-grid">
-                <div class="testimonial-card reveal">
-                    <div class="testimonial-stars">★★★★★</div>
-                    <p>"Before QueueEase, our OPD was chaos. Now patients arrive on time, doctors aren't overwhelmed, and our satisfaction scores jumped from 67% to 94% in just 3 months."</p>
-                    <div class="testimonial-author">
-                        <div class="author-avatar">DR</div>
-                        <div>
-                            <strong>Dr. Ramesh Iyer</strong>
-                            <span>Chief Medical Officer, Apollo Hospitals</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="testimonial-card reveal" style="--delay: 0.15s">
-                    <div class="testimonial-stars">★★★★★</div>
-                    <p>"I used to dread hospital visits — 3-hour waits were normal. With QueueEase, I got a notification 10 minutes before my turn and walked straight in. Life-changing."</p>
-                    <div class="testimonial-author">
-                        <div class="author-avatar">SM</div>
-                        <div>
-                            <strong>Sunita Mehta</strong>
-                            <span>Patient, Fortis Healthcare</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="testimonial-card reveal" style="--delay: 0.3s">
-                    <div class="testimonial-stars">★★★★★</div>
-                    <p>"The emergency override feature is a game-changer for our trauma ward. The algorithm handles triage reprioritization faster than any human dispatcher could."</p>
-                    <div class="testimonial-author">
-                        <div class="author-avatar">AK</div>
-                        <div>
-                            <strong>Anjali Kumar</strong>
-                            <span>Emergency Nurse Coordinator, AIIMS</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ===== CTA SECTION ===== -->
-    <section class="cta-section">
-        <div class="container">
-            <div class="cta-card reveal">
-                <div class="cta-bg-glow"></div>
-                <div class="cta-content">
-                    <h2>Ready to Transform Your <span class="gradient-text">Hospital Experience?</span></h2>
-                    <p>Join 2,400+ hospitals already running smarter queues. Setup takes less than 2 hours. Results visible from day one.</p>
-                    <div class="cta-actions">
-                        <a href="#" class="btn-primary large">
-                            <i class="fas fa-rocket"></i>
-                            Start Free Trial
-                        </a>
-                        <a href="#" class="btn-ghost large">
-                            <i class="fas fa-calendar-check"></i>
-                            Book a Demo
-                        </a>
-                    </div>
-                    <p class="cta-note">No credit card required • 30-day free trial • Cancel anytime</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ===== FOOTER ===== -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-brand">
-                    <div class="nav-logo">
-                        <div class="logo-icon"><i class="fas fa-heartbeat"></i></div>
-                        <span class="logo-text">Queue<span class="accent">Ease</span></span>
-                    </div>
-                    <p>Smart Healthcare Queue Optimization. Built for patients, designed for hospitals.</p>
-                    <div class="footer-social">
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-linkedin"></i></a>
-                        <a href="#"><i class="fab fa-github"></i></a>
-                    </div>
-                </div>
-                <div class="footer-links">
-                    <h4>Product</h4>
-                    <a href="#">Features</a>
-                    <a href="#">Pricing</a>
-                    <a href="#">API Docs</a>
-                    <a href="#">Changelog</a>
-                </div>
-                <div class="footer-links">
-                    <h4>Company</h4>
-                    <a href="#">About Us</a>
-                    <a href="#">Careers</a>
-                    <a href="#">Press Kit</a>
-                    <a href="#">Contact</a>
-                </div>
-                <div class="footer-links">
-                    <h4>Legal</h4>
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
-                    <a href="#">HIPAA Compliance</a>
-                    <a href="#">Security</a>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>© 2025 QueueEase Technologies Pvt. Ltd. All rights reserved.</p>
-                <p>Made with <i class="fas fa-heart" style="color: #ff6b6b"></i> for better healthcare.</p>
-            </div>
-        </div>
-    </footer>
-
-    <script src="js/main.js"></script>
+  <script src="js/main.js"></script>
 </body>
 </html>
