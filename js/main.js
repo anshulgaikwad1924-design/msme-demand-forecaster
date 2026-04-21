@@ -1,3 +1,4 @@
+const API_BASE = 'https://msme-backend-p0q5.onrender.com';
 /* ===================================================================
    MSME DEMAND FORECASTER — Interactive Dashboard Logic
    Chart.js · Forecasts · Toggles · Drag-Drop · Animations
@@ -351,6 +352,26 @@ function handleFileSelect(e) {
 function processFile(file) {
   const validTypes = ['.csv', '.xlsx', '.xls'];
   const ext = '.' + file.name.split('.').pop().toLowerCase();
+  if (!validTypes.includes(ext)) { showToast('Please upload a CSV or Excel file', 'error'); return; }
+  const progressEl = document.getElementById('uploadProgress');
+  progressEl.classList.add('visible');
+  const formData = new FormData();
+  formData.append('file', file);
+  fetch(API_BASE + '/api/forecast', { method: 'POST', body: formData })
+    .then(res => res.json())
+    .then(data => {
+      progressEl.classList.remove('visible');
+      if (data.error) { showToast(data.error, 'error'); return; }
+      showToast('Forecast generated successfully!', 'success');
+      console.log('Forecast data:', data);
+    })
+    .catch(err => {
+      progressEl.classList.remove('visible');
+      showToast('Backend error: ' + err.message, 'error');
+    });
+  const oldProcessFile = function(file) {
+  const validTypes = ['.csv', '.xlsx', '.xls'];
+  const ext = '.' + file.name.split('.').pop().toLowerCase();
   if (!validTypes.includes(ext)) {
     showToast('Please upload a CSV or Excel file', 'error');
     return;
@@ -678,3 +699,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+
