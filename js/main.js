@@ -354,59 +354,35 @@ function processFile(file) {
   const ext = '.' + file.name.split('.').pop().toLowerCase();
   if (!validTypes.includes(ext)) { showToast('Please upload a CSV or Excel file', 'error'); return; }
   const progressEl = document.getElementById('uploadProgress');
+  const fillEl = document.getElementById('progressBarFill');
+  const pctEl = document.getElementById('progressPct');
   progressEl.classList.add('visible');
+  if (fillEl) fillEl.style.width = '0%';
   const formData = new FormData();
   formData.append('file', file);
+  let pct = 0;
+  const interval = setInterval(() => {
+    pct += 15;
+    if (pct > 90) pct = 90;
+    if (fillEl) fillEl.style.width = pct + '%';
+    if (pctEl) pctEl.textContent = pct + '%';
+  }, 400);
   fetch(API_BASE + '/api/forecast', { method: 'POST', body: formData })
     .then(res => res.json())
     .then(data => {
-      progressEl.classList.remove('visible');
+      clearInterval(interval);
+      if (fillEl) fillEl.style.width = '100%';
+      if (pctEl) pctEl.textContent = '100%';
+      setTimeout(() => progressEl.classList.remove('visible'), 500);
       if (data.error) { showToast(data.error, 'error'); return; }
-      showToast('Forecast generated successfully!', 'success');
-      console.log('Forecast data:', data);
+      showToast('Forecast generated! ' + data.products_count + ' products analysed.', 'success');
+      console.log('Real forecast data:', data);
     })
     .catch(err => {
+      clearInterval(interval);
       progressEl.classList.remove('visible');
       showToast('Backend error: ' + err.message, 'error');
     });
-  const oldProcessFile = function(file) {
-  const validTypes = ['.csv', '.xlsx', '.xls'];
-  const ext = '.' + file.name.split('.').pop().toLowerCase();
-  if (!validTypes.includes(ext)) {
-    showToast('Please upload a CSV or Excel file', 'error');
-    return;
-  }
-
-  // Show progress overlay
-  const progressEl = document.getElementById('uploadProgress');
-  const fillEl = document.getElementById('progressBarFill');
-  const pctEl = document.getElementById('progressPct');
-
-  progressEl.classList.add('visible');
-
-  let pct = 0;
-  const msgs = ['Reading file structure...', 'Cleaning data...', 'Training LSTM model...', 'Generating forecast...', 'Finalizing predictions...'];
-  let msgIdx = 0;
-
-  const interval = setInterval(() => {
-    pct += Math.random() * 18;
-    if (pct >= 100) {
-      pct = 100;
-      clearInterval(interval);
-      setTimeout(() => {
-        progressEl.classList.remove('visible');
-        openModal();
-      }, 400);
-    }
-    fillEl.style.width = pct + '%';
-    pctEl.textContent = Math.floor(pct) + '%';
-
-    if (pct > (msgIdx + 1) * 20 && msgIdx < msgs.length - 1) {
-      msgIdx++;
-      const textEl = progressEl.querySelector('.progress-text');
-      if (textEl) textEl.textContent = msgs[msgIdx];
-    }
-  }, 200);
 }
 
 // ─── BRANCH DROPDOWN ──────────────────────────────────────────────
@@ -699,5 +675,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
 
 
